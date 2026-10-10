@@ -225,11 +225,11 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Stack oficial
 - Modelo de domínio (Conta, Categoria, Transacao, Tag, Dinheiro, Periodo, enums)
 - Estrutura de projeto confirmada (2 projetos, namespaces `Financeiro.Domain.*` dentro de `Financeiro.Api`)
+- **Testes de domínio:** 39 testes passando (xUnit + FluentAssertions)
+- **EF Core + DbContext:** Configuração completa com value converter para Dinheiro
 
 **Próximo passo:**
-- Escrever os testes do domínio (Conta, Categoria, Transacao, Tag, Dinheiro, Periodo)
-- Depois: EF Core + DbContext + configuração
-- Depois: primeiros endpoints FastEndpoints
+- Primeiros endpoints FastEndpoints (CRUD simples)
 - Depois: importação CSV/OFX
 - Depois: fila de revisão
 - Depois: dashboard + relatórios
