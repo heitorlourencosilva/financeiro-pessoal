@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Financeiro.Api</RootNamespace>
+    <AssemblyName>Financeiro.Api</AssemblyName>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- API / Vertical Slice / REPR -->
+    <PackageReference Include="FastEndpoints" Version="5.*" />
+    <PackageReference Include="FastEndpoints.Swagger" Version="5.*" />
+
+    <!-- Validação -->
+    <PackageReference Include="FluentValidation" Version="11.*" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.*" />
+
+    <!-- Persistência -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.*" />
+
+    <!-- Importação -->
+    <PackageReference Include="CsvHelper" Version="33.*" />
+
+    <!-- Blazor Server + UI -->
+    <PackageReference Include="MudBlazor" Version="7.*" />
+    <PackageReference Include="Blazor-ApexCharts" Version="7.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- O domínio vive DENTRO deste projeto (D-009), em pastas/namespaces próprios -->
+    <Folder Include="Domain\" />
+    <Folder Include="Features\" />
+    <Folder Include="Infrastructure\" />
+    <Folder Include="Components\" />
+  </ItemGroup>
+
+</Project>
