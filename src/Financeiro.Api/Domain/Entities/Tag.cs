@@ -1,6 +1,6 @@
 namespace Financeiro.Domain.Entities;
 
-public class Tag
+public sealed class Tag
 {
     public Guid Id { get; private set; }
     public string Nome { get; private set; }

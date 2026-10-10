@@ -1,6 +1,6 @@
 namespace Financeiro.Domain.Entities;
 
-public class Categoria
+public sealed class Categoria
 {
     public Guid Id { get; private set; }
     public string Nome { get; private set; }

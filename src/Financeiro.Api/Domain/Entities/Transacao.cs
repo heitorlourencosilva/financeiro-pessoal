@@ -3,7 +3,7 @@ using Financeiro.Domain.ValueObjects;
 
 namespace Financeiro.Domain.Entities;
 
-public class Transacao
+public sealed class Transacao
 {
     public Guid Id { get; private set; }
 

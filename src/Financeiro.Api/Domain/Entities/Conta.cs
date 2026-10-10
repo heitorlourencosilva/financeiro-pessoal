@@ -3,7 +3,7 @@ using Financeiro.Domain.ValueObjects;
 
 namespace Financeiro.Domain.Entities;
 
-public class Conta
+public sealed class Conta
 {
     public Guid Id { get; private set; }
     public string Nome { get; private set; }
