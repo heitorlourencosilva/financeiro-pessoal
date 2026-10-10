@@ -18,15 +18,6 @@ public readonly record struct Dinheiro
 
     public Dinheiro Abs() => new(Math.Abs(Valor), Moeda);
 
-    public Dinheiro Somar(Dinheiro outro)
-    {
-        if (Moeda != outro.Moeda)
-            throw new InvalidOperationException("Não é possível somar moedas diferentes.");
-        return new(Valor + outro.Valor, Moeda);
-    }
-
-    public Dinheiro Negar() => new(-Valor, Moeda);
-
     public static Dinheiro operator +(Dinheiro a, Dinheiro b)
     {
         if (a.Moeda != b.Moeda)

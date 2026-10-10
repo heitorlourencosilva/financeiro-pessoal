@@ -29,7 +29,7 @@ public class DinheiroTests
         var a = new Dinheiro(100m, "BRL");
         var b = new Dinheiro(50m, "BRL");
 
-        var resultado = a.Somar(b);
+        var resultado = a + b;
 
         resultado.Valor.Should().Be(150m);
         resultado.Moeda.Should().Be("BRL");
@@ -41,7 +41,7 @@ public class DinheiroTests
         var a = new Dinheiro(100m, "BRL");
         var b = new Dinheiro(50m, "USD");
 
-        var act = () => a.Somar(b);
+        var act = () => a + b;
 
         act.Should().Throw<InvalidOperationException>();
     }
@@ -53,16 +53,5 @@ public class DinheiroTests
         var b = new Dinheiro(100m, "BRL");
 
         a.Should().Be(b);
-    }
-
-    [Fact]
-    public void Negar_DeveInverterSinal()
-    {
-        var dinheiro = new Dinheiro(100m, "BRL");
-
-        var negado = dinheiro.Negar();
-
-        negado.Valor.Should().Be(-100m);
-        negado.Moeda.Should().Be("BRL");
     }
 }
