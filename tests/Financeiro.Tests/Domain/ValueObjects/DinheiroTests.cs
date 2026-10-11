@@ -2,7 +2,7 @@ using FluentAssertions;
 using Financeiro.Domain.ValueObjects;
 using Xunit;
 
-namespace Financeiro.Tests.Domain;
+namespace Financeiro.Tests.Domain.ValueObjects;
 
 public class DinheiroTests
 {

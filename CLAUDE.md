@@ -74,18 +74,20 @@ The data ingestion pipeline is defined but not built:
 
 ## Current State
 
-The project is at the start of implementation. The domain model is defined and fully tested:
-
-- ✅ Entities: Conta, Categoria, Transacao, Tag (all with domain tests)
+- ✅ Entities: Conta, Categoria, Transacao, Tag (all with domain tests - 39 tests passing)
 - ✅ Value objects: Dinheiro, Periodo (with tests)
 - ✅ Enums: NaturezaTransacao, Contexto, Pessoa, TipoConta (with tests)
 - ✅ Project structure confirmed (2 projects, namespaces within Financeiro.Api)
-- ❌ EF Core DbContext configuration (placeholder exists, entities not configured)
-- ❌ Features/endpoints (not started)
-- ❌ Importers (not started)
+- ✅ EF Core DbContext configuration (complete with value converter for Dinheiro)
+- ✅ Features/endpoints: Contas CRUD (Criar, Atualizar, Desativar, Listar, Obter)
+- ✅ Features/endpoints: Transações CRUD (Criar, Atualizar, Listar, Obter)
+- ✅ Integration tests infrastructure (Testcontainers + WebApplicationFactory + PostgreSQL)
+- ✅ Integration tests: Contas (5 test classes, covering all CRUD operations)
+- ✅ Integration tests: Transações (4 test classes, covering all CRUD operations)
+- ✅ Importação CSV Itaú
 - ❌ Blazor components (not started)
 
-**Next step per `CONTEXT.md`:** Write domain tests → EF Core + DbContext → first FastEndpoints → CSV/OFX import → review queue → dashboard + reports.
+**Next step per `CONTEXT.md`:** CSV/OFX import → review queue → dashboard + reports.
 
 ## Conventions
 
@@ -106,3 +108,7 @@ When creating or modifying UI code (HTML, CSS, component layout):
 2. **Do not proceed** with implementation if the skill fails to load.
 3. The skill will provide guidance on MudBlazor component selection, accessibility (WCAG), and responsive design patterns.
 4. Apply the design feedback before writing any code.
+
+## Progress Tracking
+
+**Update CLAUDE.md and CONTEXT.md as you work.** After completing a task, update both files to reflect the current state of implementation. This ensures the documentation stays synchronized with the code and serves as the source of truth for the project status.

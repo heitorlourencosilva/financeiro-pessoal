@@ -2,7 +2,7 @@ using FluentAssertions;
 using Financeiro.Domain.Entities;
 using Xunit;
 
-namespace Financeiro.Tests.Domain;
+namespace Financeiro.Tests.Domain.Entities;
 
 public class CategoriaTests
 {

@@ -44,4 +44,18 @@ public class EnumsTests
             Pessoa.Outro
         });
     }
+
+    [Fact]
+    public void TipoConta_DeveTerValoresEsperados()
+    {
+        Enum.GetValues<TipoConta>().Should().BeEquivalentTo(new[]
+        {
+            TipoConta.ContaCorrente,
+            TipoConta.Poupanca,
+            TipoConta.CartaoCredito,
+            TipoConta.CarteiraDigital,
+            TipoConta.Investimento,
+            TipoConta.Outro
+        });
+    }
 }

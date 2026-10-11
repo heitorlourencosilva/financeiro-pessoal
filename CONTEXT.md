@@ -44,6 +44,7 @@ Conta bancária é **meio**, não contexto. Contexto é atributo da transação.
 - **D-006:** Modelo de dados evolui para família/investimentos sem reescrita.
 - **D-007:** Contexto e Pessoa são enum agora. Migração para tabela é evolução controlada.
 - **D-008:** Moeda BRL no MVP, mas `Dinheiro` já carrega moeda.
+- **D-011:** Atualize CLAUDE.md e CONTEXT.md conforme trabalha. Documentação reflete código.
 
 ## Escopo do MVP
 
@@ -104,6 +105,7 @@ Sugestão por histórico → Fila de revisão → Classificação final
 | D-008 | 2026-10-10 | BRL no MVP, Dinheiro com moeda |
 | D-009 | 2026-10-10 | Estrutura enxuta: 2 projetos |
 | D-010 | 2026-10-10 | Frontend: Blazor Server + MudBlazor |
+| D-011 | 2026-10-11 | Atualizar CLAUDE.md e CONTEXT.md conforme trabalha |
 
 ## Como Trabalhar Neste Projeto
 
@@ -228,10 +230,13 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - **Testes de domínio:** 39 testes passando (xUnit + FluentAssertions)
 - **EF Core + DbContext:** Configuração completa com value converter para Dinheiro
 - **Endpoints FastEndpoints - Contas:** CRUD completo (Criar, Atualizar, Desativar, Listar, Obter)
+- **Endpoints FastEndpoints - Transações:** CRUD completo (Criar, Atualizar, Listar, Obter)
+- **Infraestrutura de testes de integração:** Testcontainers + WebApplicationFactory + PostgreSQL
+- **Testes de integração - Contas:** 5 classes de teste (CriarContaTests, ListarContasTests, ObterContaTests, AtualizarContaTests, DesativarContaTests)
+- **Testes de integração - Transações:** 4 classes de teste (CriarTransacaoTests, ListarTransacoesTests, ObterTransacaoTests, AtualizarTransacaoTests)
+- Importação CSV Itaú
 
 **Próximo passo:**
-- Endpoints FastEndpoints - Transações (CRUD simples)
-- Depois: importação CSV/OFX
 - Depois: fila de revisão
 - Depois: dashboard + relatórios
 

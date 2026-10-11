@@ -4,7 +4,7 @@ using Financeiro.Domain.Enums;
 using Financeiro.Domain.ValueObjects;
 using Xunit;
 
-namespace Financeiro.Tests.Domain;
+namespace Financeiro.Tests.Domain.Entities;
 
 public class TransacaoTests
 {

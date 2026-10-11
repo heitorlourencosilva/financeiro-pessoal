@@ -3,7 +3,7 @@ using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Xunit;
 
-namespace Financeiro.Tests.Domain;
+namespace Financeiro.Tests.Domain.Entities;
 
 public class ContaTests
 {

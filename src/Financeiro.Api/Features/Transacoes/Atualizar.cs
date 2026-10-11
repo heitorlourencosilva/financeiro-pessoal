@@ -26,7 +26,6 @@ public class Atualizar : Endpoint<Atualizar.FeatureRequest, Atualizar.FeatureRes
     public override async Task HandleAsync(FeatureRequest request, CancellationToken ct)
     {
         var transacao = await _context.Transacoes
-            .Include(t => t.Conta)
             .Include(t => t.Categoria)
             .SingleOrDefaultAsync(t => t.Id == request.Id, ct);
 
