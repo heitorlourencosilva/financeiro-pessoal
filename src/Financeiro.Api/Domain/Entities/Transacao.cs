@@ -133,6 +133,36 @@ public sealed class Transacao
         Observacao = string.IsNullOrWhiteSpace(observacao) ? null : observacao.Trim();
     }
 
+    public void Atualizar(
+        DateOnly data,
+        string descricaoOriginal,
+        Dinheiro valor,
+        NaturezaTransacao natureza,
+        Conta conta,
+        Contexto contexto,
+        Pessoa pessoa,
+        string? observacao)
+    {
+        if (string.IsNullOrWhiteSpace(descricaoOriginal))
+            throw new ArgumentException("Descrição é obrigatória.", nameof(descricaoOriginal));
+
+        if (conta is null)
+            throw new ArgumentNullException(nameof(conta));
+
+        if (valor.Valor == 0)
+            throw new ArgumentException("Valor não pode ser zero.", nameof(valor));
+
+        Data = data;
+        DescricaoOriginal = descricaoOriginal.Trim();
+        Valor = valor.Abs();
+        Natureza = natureza;
+        Conta = conta;
+        ContaId = conta.Id;
+        Contexto = contexto;
+        Pessoa = pessoa;
+        DefinirObservacao(observacao);
+    }
+
     // --- Regras de negócio ---
 
     public bool EhNeutra() =>

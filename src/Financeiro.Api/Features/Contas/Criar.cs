@@ -7,7 +7,7 @@ using FluentValidation;
 
 namespace Financeiro.Features.Contas;
 
-public class Criar : Endpoint<Criar.Request, Criar.Response>
+public class Criar : Endpoint<Criar.FeatureRequest, Criar.FeatureResponse>
 {
     private readonly FinanceiroDbContext _context;
 
@@ -22,7 +22,7 @@ public class Criar : Endpoint<Criar.Request, Criar.Response>
         AllowAnonymous();
     }
 
-    public override async Task HandleAsync(Criar.Request request, CancellationToken ct)
+    public override async Task HandleAsync(Criar.FeatureRequest request, CancellationToken ct)
     {
         var conta = new Conta(
             nome: request.Nome,
@@ -32,15 +32,15 @@ public class Criar : Endpoint<Criar.Request, Criar.Response>
         _context.Contas.Add(conta);
         await _context.SaveChangesAsync(ct);
 
-        await SendOkAsync(new Response(conta.Id, conta.Nome, conta.Tipo, conta.Instituicao, conta.Ativa, conta.CriadaEm), ct);
+        await SendOkAsync(new FeatureResponse(conta.Id, conta.Nome, conta.Tipo, conta.Instituicao, conta.Ativa, conta.CriadaEm), ct);
     }
 
-    public record Request(string Nome, TipoConta Tipo, string? Instituicao);
+    public record FeatureRequest(string Nome, TipoConta Tipo, string? Instituicao);
 
-    public record Response(Guid Id, string Nome, TipoConta Tipo, string? Instituicao, bool Ativa, DateTime CriadaEm);
+    public record FeatureResponse(Guid Id, string Nome, TipoConta Tipo, string? Instituicao, bool Ativa, DateTime CriadaEm);
 }
 
-public class CriarValidator : Validator<Criar.Request>
+public class CriarValidator : Validator<Criar.FeatureRequest>
 {
     public CriarValidator()
     {

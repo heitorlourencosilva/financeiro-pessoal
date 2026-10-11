@@ -5,5 +5,5 @@
     <File Path="CONTEXT.md" />
   </Folder>
   <Project Path="src/Financeiro.Api/Financeiro.Api.csproj" />
-  <Project Path="tests/Financeiro.Tests/Financeiro.Tests.csproj" Id="06c666e2-7c50-42f0-b89b-9d48643841d4" />
+  <Project Path="tests/Financeiro.Tests/Financeiro.Tests.csproj" />
 </Solution>

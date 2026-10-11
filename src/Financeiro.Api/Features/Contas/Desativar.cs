@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Financeiro.Features.Contas;
 
-public class Desativar : Endpoint<Desativar.Request, Desativar.Response>
+public class Desativar : Endpoint<Desativar.FeatureRequest, Desativar.FeatureResponse>
 {
     private readonly FinanceiroDbContext _context;
 
@@ -21,7 +21,7 @@ public class Desativar : Endpoint<Desativar.Request, Desativar.Response>
         AllowAnonymous();
     }
 
-    public override async Task HandleAsync(Desativar.Request request, CancellationToken ct)
+    public override async Task HandleAsync(Desativar.FeatureRequest request, CancellationToken ct)
     {
         var conta = await _context.Contas
             .SingleOrDefaultAsync(c => c.Id == request.Id, ct);
@@ -35,10 +35,10 @@ public class Desativar : Endpoint<Desativar.Request, Desativar.Response>
         conta.Desativar();
         await _context.SaveChangesAsync(ct);
 
-        await SendOkAsync(new Response(conta.Id, conta.Nome, conta.Tipo, conta.Instituicao, conta.Ativa, conta.CriadaEm), ct);
+        await SendOkAsync(new FeatureResponse(conta.Id, conta.Nome, conta.Tipo, conta.Instituicao, conta.Ativa, conta.CriadaEm), ct);
     }
 
-    public record Request(Guid Id);
+    public record FeatureRequest(Guid Id);
 
-    public record Response(Guid Id, string Nome, TipoConta Tipo, string? Instituicao, bool Ativa, DateTime CriadaEm);
+    public record FeatureResponse(Guid Id, string Nome, TipoConta Tipo, string? Instituicao, bool Ativa, DateTime CriadaEm);
 }

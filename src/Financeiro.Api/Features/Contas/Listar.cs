@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Financeiro.Features.Contas;
 
-public class Listar : EndpointWithoutRequest<Listar.Response[]>
+public class Listar : EndpointWithoutRequest<Listar.FeatureResponse[]>
 {
     private readonly FinanceiroDbContext _context;
 
@@ -25,11 +25,11 @@ public class Listar : EndpointWithoutRequest<Listar.Response[]>
     {
         var contas = await _context.Contas
             .OrderBy(c => c.Nome)
-            .Select(c => new Response(c.Id, c.Nome, c.Tipo, c.Instituicao, c.Ativa, c.CriadaEm))
+            .Select(c => new FeatureResponse(c.Id, c.Nome, c.Tipo, c.Instituicao, c.Ativa, c.CriadaEm))
             .ToArrayAsync(ct);
 
         await SendOkAsync(contas, ct);
     }
 
-    public new record Response(Guid Id, string Nome, TipoConta Tipo, string? Instituicao, bool Ativa, DateTime CriadaEm);
+    public record FeatureResponse(Guid Id, string Nome, TipoConta Tipo, string? Instituicao, bool Ativa, DateTime CriadaEm);
 }

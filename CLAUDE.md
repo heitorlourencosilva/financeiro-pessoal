@@ -95,6 +95,8 @@ The project is at the start of implementation. The domain model is defined and f
 - Private setters on all properties; mutations via behavior methods only.
 - No business logic in endpoints — it goes in domain or feature handlers.
 - Test naming: `MetodoCenarioResultadoEsperado`
+- **FastEndpoints naming:** Never use `Request` or `Response` as record/class names inside endpoints — `Response` is a reserved member of the `Endpoint` base class. Always use `FeatureRequest` and `FeatureResponse` (e.g., `CriarContaRequest`, `CriarContaResponse`).
+- **Migrations location:** EF Core migrations must be placed inside the `Infrastructure/Persistence` folder, not at the project root.
 
 ## Frontend Design
 

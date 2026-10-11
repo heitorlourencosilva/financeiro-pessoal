@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Financeiro.Api.Migrations
+namespace Financeiro.Api.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -69,7 +69,6 @@ namespace Financeiro.Api.Migrations
                     data = table.Column<DateOnly>(type: "date", nullable: false),
                     descricao_original = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     descricao_normalizada = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    valor = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     natureza = table.Column<int>(type: "integer", nullable: false),
                     conta_id = table.Column<Guid>(type: "uuid", nullable: false),
                     categoria_id = table.Column<Guid>(type: "uuid", nullable: true),
@@ -78,7 +77,9 @@ namespace Financeiro.Api.Migrations
                     classificada = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     observacao = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     importada_em = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    classificada_em = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    classificada_em = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    moeda = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false, defaultValue: "BRL"),
+                    valor = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false)
                 },
                 constraints: table =>
                 {

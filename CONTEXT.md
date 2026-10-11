@@ -227,9 +227,10 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Estrutura de projeto confirmada (2 projetos, namespaces `Financeiro.Domain.*` dentro de `Financeiro.Api`)
 - **Testes de domínio:** 39 testes passando (xUnit + FluentAssertions)
 - **EF Core + DbContext:** Configuração completa com value converter para Dinheiro
+- **Endpoints FastEndpoints - Contas:** CRUD completo (Criar, Atualizar, Desativar, Listar, Obter)
 
 **Próximo passo:**
-- Primeiros endpoints FastEndpoints (CRUD simples)
+- Endpoints FastEndpoints - Transações (CRUD simples)
 - Depois: importação CSV/OFX
 - Depois: fila de revisão
 - Depois: dashboard + relatórios

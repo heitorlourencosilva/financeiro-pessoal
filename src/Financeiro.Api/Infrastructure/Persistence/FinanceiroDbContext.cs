@@ -129,13 +129,20 @@ public class FinanceiroDbContext : DbContext
                 .HasMaxLength(500)
                 .HasColumnName("descricao_normalizada");
 
-            // Dinheiro usando value converter (structs não são suportados como owned types no EF Core 10)
-            // Armazena como "valor;moeda" (ex: "1500,50;BRL") para facilitar parsing
-            builder.Property(e => e.Valor)
-                .HasConversion<DinheiroConverter>()
-                .IsRequired()
-                .HasMaxLength(50)
-                .HasColumnName("valor");
+            // Dinheiro como complex type — mapeia para duas colunas: valor_valor e valor_moeda
+            builder.ComplexProperty(e => e.Valor, dinheiroBuilder =>
+            {
+                dinheiroBuilder.Property(d => d.Valor)
+                    .HasColumnName("valor")
+                    .HasPrecision(18, 2)
+                    .IsRequired();
+
+                dinheiroBuilder.Property(d => d.Moeda)
+                    .HasColumnName("moeda")
+                    .HasMaxLength(3)
+                    .IsRequired()
+                    .HasDefaultValue("BRL");
+            });
 
             builder.Property(e => e.Natureza)
                 .HasConversion<int>()
