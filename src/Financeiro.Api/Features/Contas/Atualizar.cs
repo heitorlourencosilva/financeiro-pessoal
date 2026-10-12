@@ -1,6 +1,6 @@
 using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
-using Financeiro.Api.Infrastructure.Persistence;
+using Financeiro.Infrastructure.Persistence;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;

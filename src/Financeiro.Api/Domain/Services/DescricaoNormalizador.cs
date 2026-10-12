@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Financeiro.Infrastructure.Importers;
+namespace Financeiro.Domain.Services;
 
 public static partial class DescricaoNormalizador
 {

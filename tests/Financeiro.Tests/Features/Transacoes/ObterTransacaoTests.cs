@@ -39,7 +39,7 @@ public class ObterTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Obter.FeatureResponse>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse>();
         result.Should().NotBeNull();
         result!.Id.Should().Be(transacao.Id);
         result.Data.Should().Be(new DateOnly(2024, 10, 15));
@@ -99,7 +99,7 @@ public class ObterTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Obter.FeatureResponse>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse>();
         result.Should().NotBeNull();
         result!.CategoriaId.Should().Be(categoria.Id);
         result.CategoriaNome.Should().Be("Alimentação");
@@ -135,7 +135,7 @@ public class ObterTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Obter.FeatureResponse>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse>();
         result.Should().NotBeNull();
         result!.CategoriaId.Should().BeNull();
         result.CategoriaNome.Should().BeNull();

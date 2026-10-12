@@ -37,15 +37,16 @@ No lint command is configured; `TreatWarningsAsErrors` is `false` in the API pro
 
 ### Single-Project Domain
 
-Despite the stack table in `CONTEXT.md` showing separate layers, the actual implementation is a **single project** (`Financeiro.Api`). Domain entities, value objects, enums, features, infrastructure, and Blazor components all live under `src/Financeiro.Api/`. Namespaces provide organization:
+Despite the stack table in `CONTEXT.md` showing separate layers, the actual implementation is a **single project** (`Financeiro.Api`). Domain entities, value objects, enums, services, features, infrastructure, and Blazor components all live under `src/Financeiro.Api/`. Namespaces provide organization:
 
 - `Financeiro.Domain.Entities` — Conta, Categoria, Transacao, Tag
 - `Financeiro.Domain.Enums` — NaturezaTransacao, TipoConta, Pessoa, Contexto
 - `Financeiro.Domain.ValueObjects` — Dinheiro, Periodo
+- `Financeiro.Domain.Services` — DescricaoNormalizador (text normalization, used by Transacao)
 - `Financeiro.Features.<NomeDaFeature>` — vertical slices (one folder per use case)
-- `Financeiro.Infrastructure.Persistence` — EF Core DbContext (currently a placeholder)
-- `Financeiro.Infrastructure.Importers` — CSV/OFX import (not yet started)
-- `Financeiro.Components` — Blazor Server + MudBlazor UI (not yet started)
+- `Financeiro.Infrastructure.Persistence` — EF Core DbContext + migrations
+- `Financeiro.Infrastructure.Importers` — CSV/OFX import (CSV Itaú done; OFX pending)
+- `Financeiro.Api.Components` — Blazor Server + MudBlazor UI (scaffolding only)
 
 ### Key Design Decisions
 
@@ -58,17 +59,22 @@ Despite the stack table in `CONTEXT.md` showing separate layers, the actual impl
 - **Aporte/Resgate of investments = neutral transfer** in the MVP.
 - **Private setters** on all entities — changes happen only via behavior methods (e.g., `Classificar`, `Desclassificar`, `AdicionarTag`, `NormalizarDescricao`).
 - **EF Core constructors are private**; EF Core uses them for materialization while domain creation uses public constructors.
+- **Normalization is a domain concern.** `DescricaoNormalizador` lives in `Financeiro.Domain.Services` and is invoked by `Transacao`'s constructor and `Atualizar` method — never by endpoints.
+- **`TransacaoResponse` is shared.** All transaction endpoints use the same response record (defined in `Features/Transacoes/TransacaoResponse.cs`), eliminating duplication.
+- **`Desclassificar` clears tags.** When a transaction is unclassified, its tags are removed along with its category.
+- **Reclassification is allowed.** Calling `Classificar` on an already-classified transaction overwrites the previous classification silently.
+- **Classificar returns 404 for missing tags.** If any `TagId` in the request does not exist, the endpoint returns 404 instead of ignoring it.
 
 ### Transaction Flow
 
 The data ingestion pipeline is partially implemented:
 
 1. ✅ Import CSV/OFX (CSV Itaú done; OFX pending)
-2. ⚠️ Normalize (domain method `NormalizarDescricao` exists; not wired to import flow)
-3. ❌ Apply rules
-4. ❌ Suggest by history
+2. ✅ Normalize (applied automatically by `Transacao` constructor and `Atualizar`)
+3. ⏳ Apply rules
+4. ⏳ Suggest by history
 5. ✅ Review queue (`/api/transacoes/pendentes`, `/classificar`, `/desclassificar`)
-6. ⚠️ Final classification (endpoint exists; automatic rules pending)
+6. ⏳ Final classification (endpoint exists; automatic rules pending)
 
 ### Testing Strategy
 
@@ -82,17 +88,21 @@ The data ingestion pipeline is partially implemented:
 - ✅ Entities: Conta, Categoria, Transacao, Tag (with domain tests)
 - ✅ Value objects: Dinheiro, Periodo (with tests)
 - ✅ Enums: NaturezaTransacao, Contexto, Pessoa, TipoConta (with tests)
+- ✅ Domain services: DescricaoNormalizador (moved from Infrastructure, with tests)
 - ✅ Project structure confirmed (2 projects, namespaces within Financeiro.Api)
-- ✅ EF Core DbContext configuration (complete with value converter for Dinheiro)
+- ✅ EF Core DbContext configuration (complete with complex property for Dinheiro)
 - ✅ Features/endpoints: Contas CRUD (Criar, Atualizar, Desativar, Listar, Obter)
 - ✅ Features/endpoints: Transações CRUD (Criar, Atualizar, Listar, Obter)
 - ✅ Integration tests infrastructure (Testcontainers + WebApplicationFactory + PostgreSQL)
 - ✅ Integration tests: Contas (5 test classes, covering all CRUD operations)
-- ✅ Integration tests: Transações (4 test classes, covering all CRUD operations)
+- ✅ Integration tests: Transações (5 test classes, covering all CRUD operations)
 - ✅ Importação CSV Itaú
-- ✅ Review queue: `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar` + `FilaRevisaoTests` (12 tests)
-- ✅ Test suite: all green
-- ❌ Blazor components (not started)
+- ✅ Review queue: `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar` + `FilaRevisaoTests`
+- ✅ Shared `TransacaoResponse` (eliminated 7 duplicated response records)
+- ✅ Blazor Server scaffolding (App.razor, Routes.razor, MainLayout.razor) — components not yet built
+- ✅ Test suite: 130 tests passing
+- ❌ Blazor components (business screens not started)
+- ❌ Dashboard + reports (next step)
 
 **Next step per `CONTEXT.md`:** dashboard + reports.
 
@@ -104,8 +114,9 @@ The data ingestion pipeline is partially implemented:
 - Private setters on all properties; mutations via behavior methods only.
 - No business logic in endpoints — it goes in domain or feature handlers.
 - Test naming: `MetodoCenarioResultadoEsperado`
-- **FastEndpoints naming:** Never use `Request` or `Response` as record/class names inside endpoints — `Response` is a reserved member of the `Endpoint` base class. Always use `FeatureRequest` and `FeatureResponse` (e.g., `CriarContaRequest`, `CriarContaResponse`).
-- **Migrations location:** EF Core migrations must be placed inside the `Infrastructure/Persistence` folder, not at the project root.
+- **FastEndpoints naming:** Never use `Request` or `Response` as record/class names inside endpoints — `Response` is a reserved member of the `Endpoint` base class. Always use `FeatureRequest` and `FeatureResponse`. For shared responses, use a plain record like `TransacaoResponse`.
+- **Migrations location:** EF Core migrations must be placed inside the `Infrastructure/Persistence/Migrations` folder, not at the project root.
+- **No unnecessary `Include()`:** if the response record doesn't expose a navigation property, don't `.Include()` it.
 
 ## Frontend Design
 

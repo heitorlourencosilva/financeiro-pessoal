@@ -23,7 +23,7 @@ public class ListarTransacoesTests(PostgresFixture fixture) : IntegrationTestBas
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Listar.FeatureResponse[]>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse[]>();
         result.Should().NotBeNull();
         result!.Should().BeEmpty();
     }
@@ -51,7 +51,7 @@ public class ListarTransacoesTests(PostgresFixture fixture) : IntegrationTestBas
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Listar.FeatureResponse[]>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse[]>();
         result.Should().NotBeNull();
         result!.Should().HaveCount(3);
         result![0].Data.Should().Be(new DateOnly(2024, 10, 15)); // Mais recente
@@ -83,7 +83,7 @@ public class ListarTransacoesTests(PostgresFixture fixture) : IntegrationTestBas
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Listar.FeatureResponse[]>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse[]>();
         result.Should().NotBeNull();
         result!.Should().HaveCount(4);
         result!.Select(t => t.Natureza).Should().Contain(new[]
@@ -119,7 +119,7 @@ public class ListarTransacoesTests(PostgresFixture fixture) : IntegrationTestBas
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Listar.FeatureResponse[]>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse[]>();
         result.Should().NotBeNull();
         result!.Should().HaveCount(4);
         result!.Select(t => t.Contexto).Should().Contain(new[]
@@ -155,7 +155,7 @@ public class ListarTransacoesTests(PostgresFixture fixture) : IntegrationTestBas
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Listar.FeatureResponse[]>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse[]>();
         result.Should().NotBeNull();
         result!.Should().HaveCount(4);
         result!.Select(t => t.Pessoa).Should().Contain(new[]

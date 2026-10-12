@@ -1,7 +1,7 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using Financeiro.Api.Components;
-using Financeiro.Api.Infrastructure.Persistence;
+using Financeiro.Infrastructure.Persistence;
 using Financeiro.Infrastructure.Importers;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;

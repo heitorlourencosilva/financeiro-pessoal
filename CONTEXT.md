@@ -19,7 +19,7 @@ fontes de renda (YouTube, blog, site) e investimentos — sem reescrita.
 | Validação | FluentValidation |
 | Frontend | Blazor Server + MudBlazor |
 | Gráficos | ApexCharts.Blazor (ou equivalente) |
-| Importação | CsvHelper + parser OFX em C# |
+| Importação | Parser CSV em C# (OFX planejado) |
 | Testes | xUnit + FluentAssertions + Testcontainers + WebApplicationFactory + Bunit |
 | Hospedagem | Local → TV Box com Linux (evolução) |
 | Estrutura | 2 projetos: `src/Financeiro.Api` + `tests/Financeiro.Tests` |
@@ -108,6 +108,11 @@ Sugestão por histórico → Fila de revisão → Classificação final
 | D-011 | 2026-10-11 | Atualizar CLAUDE.md e CONTEXT.md conforme trabalha |
 | D-012 | 2026-10-12 | Classificar retorna 404 se qualquer TagId não existir (não ignora silenciosamente) |
 | D-013 | 2026-10-12 | Endpoints PUT com FeatureRequest vazio exigem Content-Type application/json; cliente envia corpo `{}` |
+| D-014 | 2026-10-12 | Normalização de descrição é regra de domínio; vive em `Financeiro.Domain.Services.DescricaoNormalizador` e é aplicada pelo construtor de `Transacao` e por `Atualizar`, nunca nos endpoints |
+| D-015 | 2026-10-12 | Endpoints de listagem/obtenção não incluem `Tags` via `.Include()` — o `TransacaoResponse` não expõe tags; carregar é desperdício |
+| D-016 | 2026-10-12 | `Desclassificar` limpa as Tags associadas além de remover a categoria |
+| D-017 | 2026-10-12 | Reclassificação é permitida — chamar `Classificar` em transação já classificada sobrescreve a classificação anterior sem erro |
+| D-018 | 2026-10-12 | `FeatureResponse` de transações é compartilhado em `TransacaoResponse` (record único), eliminando duplicação entre endpoints |
 
 ## Como Trabalhar Neste Projeto
 
@@ -124,48 +129,58 @@ Sugestão por histórico → Fila de revisão → Classificação final
 ```
 Financeiro.sln
 src/
-Financeiro.Api/
-Financeiro.Api.csproj
-Program.cs
-Domain/
-Entidades/
-Conta.cs
-Categoria.cs
-Transacao.cs
-Tag.cs
-Enums/
-NaturezaTransacao.cs
-TipoConta.cs
-Pessoa.cs
-Contexto.cs
-ValueObjects/
-Dinheiro.cs
-Periodo.cs
-Features/
-(Vertical Slices — uma pasta por caso de uso)
-Infrastructure/
-Persistence/
-Importers/
-Components/
-(Blazor Server + MudBlazor)
+  Financeiro.Api/
+    Financeiro.Api.csproj
+    Program.cs
+    Domain/
+      Entities/
+        Conta.cs
+        Categoria.cs
+        Transacao.cs
+        Tag.cs
+      Enums/
+        NaturezaTransacao.cs
+        TipoConta.cs
+        Pessoa.cs
+        Contexto.cs
+      ValueObjects/
+        Dinheiro.cs
+        Periodo.cs
+      Services/
+        DescricaoNormalizador.cs
+    Features/
+      (Vertical Slices — uma pasta por caso de uso)
+    Infrastructure/
+      Persistence/
+        FinanceiroDbContext.cs
+        Migrations/
+      Importers/
+        ItauCsvParser.cs
+    Components/
+      (Blazor Server + MudBlazor)
+      App.razor
+      Routes.razor
+      _Imports.razor
+      Layout/
+        MainLayout.razor
 tests/
-Financeiro.Tests/
-Financeiro.Tests.csproj
-Domain/
-Features/
-Infrastructure/
+  Financeiro.Tests/
+    Financeiro.Tests.csproj
+    Domain/
+    Features/
+    Infrastructure/
 ```
-
 
 ### Namespaces
 
-- `Financeiro.Domain.Entidades`
+- `Financeiro.Domain.Entities`
 - `Financeiro.Domain.Enums`
 - `Financeiro.Domain.ValueObjects`
+- `Financeiro.Domain.Services`
 - `Financeiro.Features.<NomeDaFeature>`
 - `Financeiro.Infrastructure.Persistence`
 - `Financeiro.Infrastructure.Importers`
-- `Financeiro.Components`
+- `Financeiro.Api.Components`
 
 Projeto único. Namespaces organizam. Migração futura para múltiplos projetos é possível sem reescrita.
 
@@ -179,6 +194,8 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - **Validação:** invariantes no construtor + FluentValidation nos requests da API.
 - **Nada de saldo em entidade.** Saldo é cálculo.
 - **Nada de lógica de negócio em endpoint.** Lógica vai no domínio ou em handler de feature.
+- **FastEndpoints:** nunca usar `Request`/`Response` como nome de record — sempre `FeatureRequest`/`FeatureResponse` (colisão com membros da base class).
+- **Resposta compartilhada:** endpoints de transações usam `TransacaoResponse` (record único com `FromTransacao`).
 
 ### Convenções de Teste
 
@@ -186,7 +203,7 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - **FluentAssertions** para asserções.
 - **Testcontainers** para testes de integração com PostgreSQL real.
 - **WebApplicationFactory** para testes de endpoint.
-- **Bunit** para testes de componente Blazor.
+- **Bunit** para testes de componente Blazor (quando existirem).
 - **Nomenclatura:** `MetodoCenarioResultadoEsperado` (ex.: `Classificar_SemCategoria_LancaExcecao`).
 - **Padrão:** Arrange / Act / Assert explícito.
 - **Um comportamento por teste.**
@@ -211,6 +228,7 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Não usar Angular, React ou qualquer frontend JS.
 - Não criar tabela para Contexto/Pessoa no MVP (são enums).
 - Não ignorar testes para "ir mais rápido".
+- Não incluir `Tags` em `.Include()` quando o response não expõe tags.
 
 ### Fluxo de Trabalho
 
@@ -229,19 +247,27 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Stack oficial
 - Modelo de domínio (Conta, Categoria, Transacao, Tag, Dinheiro, Periodo, enums)
 - Estrutura de projeto confirmada (2 projetos, namespaces `Financeiro.Domain.*` dentro de `Financeiro.Api`)
-- **Testes de domínio:** 39 testes passando (xUnit + FluentAssertions)
-- **EF Core + DbContext:** Configuração completa com value converter para Dinheiro
+- **Testes de domínio:** 39 testes (xUnit + FluentAssertions)
+- **EF Core + DbContext:** configuração completa com complex property para Dinheiro
 - **Endpoints FastEndpoints - Contas:** CRUD completo (Criar, Atualizar, Desativar, Listar, Obter)
 - **Endpoints FastEndpoints - Transações:** CRUD completo (Criar, Atualizar, Listar, Obter)
 - **Infraestrutura de testes de integração:** Testcontainers + WebApplicationFactory + PostgreSQL
 - **Testes de integração - Contas:** 5 classes de teste (CriarContaTests, ListarContasTests, ObterContaTests, AtualizarContaTests, DesativarContaTests)
-- **Testes de integração - Transações:** 4 classes de teste (CriarTransacaoTests, ListarTransacoesTests, ObterTransacaoTests, AtualizarTransacaoTests)
+- **Testes de integração - Transações:** 5 classes de teste (CriarTransacaoTests, ListarTransacoesTests, ObterTransacaoTests, AtualizarTransacaoTests, FilaRevisaoTests)
 - Importação CSV Itaú
-- **Fila de revisão:** `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar` + `FilaRevisaoTests` (12 testes)
-- **Suíte total:** 128 testes passando
+- **Fila de revisão:** `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar`
+- **Refatorações de qualidade:**
+  - `TransacaoResponse` compartilhado (eliminou 7 duplicações)
+  - `DescricaoNormalizador` movido para `Financeiro.Domain.Services` e aplicado no domínio
+  - `Include(Tags)` removido de endpoints que não expõem tags
+  - `Desclassificar` limpa Tags
+  - Namespace `Financeiro.Infrastructure.Persistence` (sem `.Api.` no meio)
+- **Suíte total:** 130 testes passando (39 domínio + 91 integração)
 
 **Próximo passo:**
-- Dashboard + relatórios
+- Dashboard + relatórios (composição, fluxo de caixa, por conta, por categoria)
 
 **Pendências de decisão:**
-- Nenhuma no momento.
+- Como tratar `TipoConta.CartaoCredito` na importação? (fatura vem em XLSX, relação 1:N com transações)
+- Futuro: mover `DescricaoNormalizador` para um projeto `Financeiro.Domain` físico? (hoje é pasta dentro de `Financeiro.Api`)
+- Futuro: parser OFX (quando houver fonte que exporte nesse formato)

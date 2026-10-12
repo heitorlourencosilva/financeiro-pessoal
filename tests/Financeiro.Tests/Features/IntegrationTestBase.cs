@@ -1,4 +1,4 @@
-using Financeiro.Api.Infrastructure.Persistence;
+using Financeiro.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

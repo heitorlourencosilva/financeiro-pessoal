@@ -3,6 +3,7 @@ using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Domain.ValueObjects;
 using Xunit;
+using Financeiro.Domain.Services;
 
 namespace Financeiro.Tests.Domain.Entities;
 
@@ -273,5 +274,52 @@ public class TransacaoTests
         var act = () => t.NormalizarDescricao("  ");
 
         act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void CriarTransacao_DescricaoOriginal_DeveNormalizarAutomaticamente()
+    {
+        // Arrange
+        var descricaoOriginal = "  PADARIA  ";
+
+        // Act
+        var transacao = new Transacao(
+            new DateOnly(2026, 10, 12),
+            descricaoOriginal,
+            new Dinheiro(10),
+            NaturezaTransacao.Receita,
+            CriarConta());
+
+        // Assert
+        Assert.Equal("PADARIA", transacao.DescricaoOriginal);
+        Assert.Equal(DescricaoNormalizador.Normalizar("PADARIA"), transacao.DescricaoNormalizada);
+    }
+
+    [Fact]
+    public void Atualizar_DescricaoOriginal_DeveRenormalizar()
+    {
+        // Arrange
+        var transacao = new Transacao(
+            new DateOnly(2026, 10, 12),
+            "PADARIA",
+            new Dinheiro(10),
+            NaturezaTransacao.Receita,
+            CriarConta());
+        var novaDescricao = "  Mercado  ";
+
+        // Act
+        transacao.Atualizar(
+            new DateOnly(2026, 10, 12),
+            novaDescricao,
+            new Dinheiro(10),
+            NaturezaTransacao.Receita,
+            CriarConta(),
+            Contexto.Pessoal,
+            Pessoa.Eu,
+            null);
+
+        // Assert
+        Assert.Equal("Mercado", transacao.DescricaoOriginal);
+        Assert.Equal(DescricaoNormalizador.Normalizar("Mercado"), transacao.DescricaoNormalizada);
     }
 }

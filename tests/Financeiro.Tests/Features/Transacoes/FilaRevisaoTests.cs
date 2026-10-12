@@ -26,7 +26,7 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<ListarPendentes.FeatureResponse[]>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse[]>();
         result.Should().NotBeNull();
         result!.Should().BeEmpty();
     }
@@ -56,7 +56,7 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<ListarPendentes.FeatureResponse[]>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse[]>();
         result.Should().NotBeNull();
         result!.Should().HaveCount(1);
         result![0].Id.Should().Be(pendente.Id);
@@ -86,7 +86,7 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<ListarPendentes.FeatureResponse[]>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse[]>();
         result.Should().NotBeNull();
         result!.Should().HaveCount(3);
         result![0].Data.Should().Be(new DateOnly(2024, 10, 15));
@@ -125,7 +125,7 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Classificar.FeatureResponse>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse>();
         result.Should().NotBeNull();
         result!.Classificada.Should().BeTrue();
         result!.CategoriaId.Should().Be(categoria.Id);
@@ -321,7 +321,7 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Desclassificar.FeatureResponse>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse>();
         result.Should().NotBeNull();
         result!.Classificada.Should().BeFalse();
         result!.CategoriaId.Should().BeNull();
@@ -366,7 +366,7 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Desclassificar.FeatureResponse>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse>();
         result.Should().NotBeNull();
         result!.Classificada.Should().BeFalse();
         result!.CategoriaId.Should().BeNull();

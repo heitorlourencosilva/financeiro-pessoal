@@ -1,8 +1,8 @@
-using Financeiro.Infrastructure.Importers;
+using Financeiro.Domain.Services;
 using FluentAssertions;
 using Xunit;
 
-namespace Financeiro.Tests.Infrastructure.Importers;
+namespace Financeiro.Tests.Domain.Services;
 
 public class DescricaoNormalizadorTests
 {

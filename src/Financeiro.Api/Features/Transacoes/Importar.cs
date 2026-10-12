@@ -1,5 +1,5 @@
 using Financeiro.Domain.Entities;
-using Financeiro.Api.Infrastructure.Persistence;
+using Financeiro.Infrastructure.Persistence;
 using Financeiro.Infrastructure.Importers;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -75,9 +75,6 @@ public class Importar : EndpointWithoutRequest<Importar.FeatureResponse>
                 valor: linha.Valor,
                 natureza: linha.Natureza,
                 conta: conta);
-
-            transacao.NormalizarDescricao(
-                DescricaoNormalizador.Normalizar(linha.DescricaoOriginal));
 
             _context.Transacoes.Add(transacao);
         }

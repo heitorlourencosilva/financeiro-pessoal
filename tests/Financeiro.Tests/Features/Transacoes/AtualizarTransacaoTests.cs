@@ -50,7 +50,7 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Atualizar.FeatureResponse>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse>();
         result.Should().NotBeNull();
         result!.Id.Should().Be(transacao.Id);
         result.Data.Should().Be(new DateOnly(2024, 10, 20));
@@ -172,7 +172,7 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<Atualizar.FeatureResponse>();
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse>();
         result.Should().NotBeNull();
         result!.ContaId.Should().Be(conta2.Id);
         result.ContaNome.Should().Be("Inter");

@@ -1,4 +1,5 @@
 using Financeiro.Domain.Enums;
+using Financeiro.Domain.Services;
 using Financeiro.Domain.ValueObjects;
 
 namespace Financeiro.Domain.Entities;
@@ -61,6 +62,7 @@ public sealed class Transacao
         Id = Guid.NewGuid();
         Data = data;
         DescricaoOriginal = descricaoOriginal.Trim();
+        DescricaoNormalizada = DescricaoNormalizador.Normalizar(DescricaoOriginal);
         Valor = valor.Abs();
         Natureza = natureza;
         Conta = conta;
@@ -105,6 +107,7 @@ public sealed class Transacao
         CategoriaId = null;
         Classificada = false;
         ClassificadaEm = null;
+        Tags = [];
     }
 
     public void NormalizarDescricao(string descricaoNormalizada)
@@ -154,6 +157,7 @@ public sealed class Transacao
 
         Data = data;
         DescricaoOriginal = descricaoOriginal.Trim();
+        DescricaoNormalizada = DescricaoNormalizador.Normalizar(DescricaoOriginal);
         Valor = valor.Abs();
         Natureza = natureza;
         Conta = conta;

@@ -3,7 +3,7 @@ using Financeiro.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Financeiro.Api.Infrastructure.Persistence;
+namespace Financeiro.Infrastructure.Persistence;
 
 public class FinanceiroDbContext : DbContext
 {
