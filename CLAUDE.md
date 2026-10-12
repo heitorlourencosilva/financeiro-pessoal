@@ -10,7 +10,7 @@ The system controls income, expenses, transfers, and investments across multiple
 
 ## Primary Source of Truth
 
-**`CONTEXT.md`** — read this file entirely before any work. It defines the domain model, rules (D-001 through D-010), invariants, and the execution workflow. The system uses an "anti-hallucination mechanism": `CONTEXT.md` is the authority; if any AI output contradicts it, the file wins. The current status and next steps are tracked at the bottom of `CONTEXT.md` — check it before starting work.
+**`CONTEXT.md`** — read this file entirely before any work. It defines the domain model, rules (D-001 onwards), invariants, and the execution workflow. The system uses an "anti-hallucination mechanism": `CONTEXT.md` is the authority; if any AI output contradicts it, the file wins. The current status and next steps are tracked at the bottom of `CONTEXT.md` — check it before starting work.
 
 ## Commands
 
@@ -59,22 +59,27 @@ Despite the stack table in `CONTEXT.md` showing separate layers, the actual impl
 - **Private setters** on all entities — changes happen only via behavior methods (e.g., `Classificar`, `Desclassificar`, `AdicionarTag`, `NormalizarDescricao`).
 - **EF Core constructors are private**; EF Core uses them for materialization while domain creation uses public constructors.
 
-### Transaction Flow (not yet implemented)
+### Transaction Flow
 
-The data ingestion pipeline is defined but not built:
+The data ingestion pipeline is partially implemented:
 
-1. Import CSV/OFX → 2. Normalize → 3. Apply rules → 4. Suggest by history → 5. Review queue → 6. Final classification
+1. ✅ Import CSV/OFX (CSV Itaú done; OFX pending)
+2. ⚠️ Normalize (domain method `NormalizarDescricao` exists; not wired to import flow)
+3. ❌ Apply rules
+4. ❌ Suggest by history
+5. ✅ Review queue (`/api/transacoes/pendentes`, `/classificar`, `/desclassificar`)
+6. ⚠️ Final classification (endpoint exists; automatic rules pending)
 
 ### Testing Strategy
 
 - **Domain tests** live in `tests/Financeiro.Tests/Domain/` and use xUnit + FluentAssertions (no external dependencies).
-- **Integration tests** with Testcontainers + WebApplicationFactory will be added when API endpoints exist.
+- **Integration tests** use Testcontainers + WebApplicationFactory against a real PostgreSQL instance, via a shared `PostgresFixture` and `IntegrationTestBase`. Each test class inherits from `IntegrationTestBase` and calls `ClearDatabaseAsync()` in the Arrange phase.
 - **Component tests** with Bunit will be added when Blazor components exist.
 - Tests follow the naming convention `MetodoCenarioResultadoEsperado` (e.g., `Transferencia_EhNeutra_NaoAfetaFluxoDeCaixa`) and the explicit Arrange/Act/Assert pattern.
 
 ## Current State
 
-- ✅ Entities: Conta, Categoria, Transacao, Tag (all with domain tests - 39 tests passing)
+- ✅ Entities: Conta, Categoria, Transacao, Tag (with domain tests)
 - ✅ Value objects: Dinheiro, Periodo (with tests)
 - ✅ Enums: NaturezaTransacao, Contexto, Pessoa, TipoConta (with tests)
 - ✅ Project structure confirmed (2 projects, namespaces within Financeiro.Api)
@@ -85,9 +90,11 @@ The data ingestion pipeline is defined but not built:
 - ✅ Integration tests: Contas (5 test classes, covering all CRUD operations)
 - ✅ Integration tests: Transações (4 test classes, covering all CRUD operations)
 - ✅ Importação CSV Itaú
+- ✅ Review queue: `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar` + `FilaRevisaoTests` (12 tests)
+- ✅ Test suite: all green
 - ❌ Blazor components (not started)
 
-**Next step per `CONTEXT.md`:** CSV/OFX import → review queue → dashboard + reports.
+**Next step per `CONTEXT.md`:** dashboard + reports.
 
 ## Conventions
 

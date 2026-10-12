@@ -106,6 +106,8 @@ Sugestão por histórico → Fila de revisão → Classificação final
 | D-009 | 2026-10-10 | Estrutura enxuta: 2 projetos |
 | D-010 | 2026-10-10 | Frontend: Blazor Server + MudBlazor |
 | D-011 | 2026-10-11 | Atualizar CLAUDE.md e CONTEXT.md conforme trabalha |
+| D-012 | 2026-10-12 | Classificar retorna 404 se qualquer TagId não existir (não ignora silenciosamente) |
+| D-013 | 2026-10-12 | Endpoints PUT com FeatureRequest vazio exigem Content-Type application/json; cliente envia corpo `{}` |
 
 ## Como Trabalhar Neste Projeto
 
@@ -235,10 +237,11 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - **Testes de integração - Contas:** 5 classes de teste (CriarContaTests, ListarContasTests, ObterContaTests, AtualizarContaTests, DesativarContaTests)
 - **Testes de integração - Transações:** 4 classes de teste (CriarTransacaoTests, ListarTransacoesTests, ObterTransacaoTests, AtualizarTransacaoTests)
 - Importação CSV Itaú
+- **Fila de revisão:** `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar` + `FilaRevisaoTests` (12 testes)
+- **Suíte total:** 128 testes passando
 
 **Próximo passo:**
-- Depois: fila de revisão
-- Depois: dashboard + relatórios
+- Dashboard + relatórios
 
 **Pendências de decisão:**
 - Nenhuma no momento.
