@@ -18,15 +18,17 @@ public class Atualizar : Endpoint<Atualizar.FeatureRequest, TransacaoResponse>
 
     public override void Configure()
     {
-        Put("/api/transacoes/{Id}");
+        Put("/api/transacoes/{id}");
         AllowAnonymous();
     }
 
     public override async Task HandleAsync(FeatureRequest request, CancellationToken ct)
     {
+        var id = Route<Guid>("id");
+
         var transacao = await _context.Transacoes
             .Include(t => t.Categoria)
-            .SingleOrDefaultAsync(t => t.Id == request.Id, ct);
+            .SingleOrDefaultAsync(t => t.Id == id, ct);
 
         if (transacao is null)
         {
@@ -59,7 +61,6 @@ public class Atualizar : Endpoint<Atualizar.FeatureRequest, TransacaoResponse>
     }
 
     public record FeatureRequest(
-        Guid Id,
         DateOnly Data,
         string Descricao,
         decimal Valor,

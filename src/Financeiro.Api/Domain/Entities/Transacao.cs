@@ -107,7 +107,7 @@ public sealed class Transacao
         CategoriaId = null;
         Classificada = false;
         ClassificadaEm = null;
-        Tags = [];
+        Tags.Clear();
     }
 
     public void NormalizarDescricao(string descricaoNormalizada)

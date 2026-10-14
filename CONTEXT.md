@@ -109,7 +109,7 @@ Sugestão por histórico → Fila de revisão → Classificação final
 | D-012 | 2026-10-12 | Classificar retorna 404 se qualquer TagId não existir (não ignora silenciosamente) |
 | D-013 | 2026-10-12 | Endpoints PUT com FeatureRequest vazio exigem Content-Type application/json; cliente envia corpo `{}` |
 | D-014 | 2026-10-12 | Normalização de descrição é regra de domínio; vive em `Financeiro.Domain.Services.DescricaoNormalizador` e é aplicada pelo construtor de `Transacao` e por `Atualizar`, nunca nos endpoints |
-| D-015 | 2026-10-12 | Endpoints de listagem/obtenção não incluem `Tags` via `.Include()` — o `TransacaoResponse` não expõe tags; carregar é desperdício |
+| D-015 | 2026-10-12 | Endpoints de listagem/obtenção não incluem `Tags` via `.Include()` — o `TransacaoResponse` não expõe tags; carregar é desperdício. **Aplica-se a endpoints, não a testes** — testes que verificam persistência de tags devem usar `.Include(t => t.Tags)` |
 | D-016 | 2026-10-12 | `Desclassificar` limpa as Tags associadas além de remover a categoria |
 | D-017 | 2026-10-12 | Reclassificação é permitida — chamar `Classificar` em transação já classificada sobrescreve a classificação anterior sem erro |
 | D-018 | 2026-10-12 | `FeatureResponse` de transações é compartilhado em `TransacaoResponse` (record único), eliminando duplicação entre endpoints |
@@ -262,7 +262,7 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
   - `Include(Tags)` removido de endpoints que não expõem tags
   - `Desclassificar` limpa Tags
   - Namespace `Financeiro.Infrastructure.Persistence` (sem `.Api.` no meio)
-- **Suíte total:** 130 testes passando (39 domínio + 91 integração)
+- **Suíte total:** 130 testes passando (47 domínio + 83 integração)
 
 **Próximo passo:**
 - Dashboard + relatórios (composição, fluxo de caixa, por conta, por categoria)

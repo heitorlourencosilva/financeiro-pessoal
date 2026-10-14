@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Features.Contas;
+using Financeiro.Infrastructure.Persistence;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -34,7 +35,8 @@ public class ListarContasTests(PostgresFixture fixture) : IntegrationTestBase(fi
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta1 = new Conta("Nubank", TipoConta.ContaCorrente, "Nu Pagamentos");
         var conta2 = new Conta("Carteira", TipoConta.CarteiraDigital, null);
         var conta3 = new Conta("BB", TipoConta.ContaCorrente, "Banco do Brasil");
@@ -62,7 +64,8 @@ public class ListarContasTests(PostgresFixture fixture) : IntegrationTestBase(fi
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var contaAtiva = new Conta("Ativa", TipoConta.ContaCorrente, null);
         var contaInativa = new Conta("Inativa", TipoConta.ContaCorrente, null);
         contaInativa.Desativar();
@@ -89,7 +92,8 @@ public class ListarContasTests(PostgresFixture fixture) : IntegrationTestBase(fi
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         context.Contas.AddRange(
             new Conta("Corrente", TipoConta.ContaCorrente, null),
             new Conta("Poupança", TipoConta.Poupanca, null),

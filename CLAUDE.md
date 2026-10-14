@@ -88,7 +88,7 @@ The data ingestion pipeline is partially implemented:
 - ✅ Entities: Conta, Categoria, Transacao, Tag (with domain tests)
 - ✅ Value objects: Dinheiro, Periodo (with tests)
 - ✅ Enums: NaturezaTransacao, Contexto, Pessoa, TipoConta (with tests)
-- ✅ Domain services: DescricaoNormalizador (moved from Infrastructure, with tests)
+- ✅ Domain services: DescricaoNormalizador in `Domain/Services/` (D-014, with tests)
 - ✅ Project structure confirmed (2 projects, namespaces within Financeiro.Api)
 - ✅ EF Core DbContext configuration (complete with complex property for Dinheiro)
 - ✅ Features/endpoints: Contas CRUD (Criar, Atualizar, Desativar, Listar, Obter)

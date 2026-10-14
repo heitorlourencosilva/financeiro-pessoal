@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Features.Contas;
+using Financeiro.Infrastructure.Persistence;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Financeiro.Tests.Features.Contas;
@@ -16,7 +18,8 @@ public class DesativarContaTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, "Nu Pagamentos");
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -53,7 +56,8 @@ public class DesativarContaTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Antiga", TipoConta.ContaCorrente, null);
         conta.Desativar();
         context.Contas.Add(conta);
@@ -76,7 +80,8 @@ public class DesativarContaTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var contextArrange = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var contextArrange = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         contextArrange.Contas.Add(conta);
         await contextArrange.SaveChangesAsync();
@@ -86,7 +91,8 @@ public class DesativarContaTests(PostgresFixture fixture) : IntegrationTestBase(
         await Client.DeleteAsync($"/api/contas/{contaId}/desativar");
 
         // Assert
-        await using var contextAssert = await GetDbContextAsync();
+        await using var contextAssertScope = CreateAsyncScope();
+        var contextAssert = contextAssertScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var contaDesativada = await contextAssert.Contas.FindAsync(contaId);
         contaDesativada.Should().NotBeNull();
         contaDesativada!.Ativa.Should().BeFalse();

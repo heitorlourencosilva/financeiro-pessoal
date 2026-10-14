@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Features.Contas;
+using Financeiro.Infrastructure.Persistence;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Financeiro.Tests.Features.Contas;
@@ -16,7 +18,8 @@ public class AtualizarContaTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, "Nu Pagamentos");
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -58,7 +61,8 @@ public class AtualizarContaTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -78,7 +82,8 @@ public class AtualizarContaTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -98,7 +103,8 @@ public class AtualizarContaTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Antiga", TipoConta.ContaCorrente, null);
         conta.Desativar();
         context.Contas.Add(conta);

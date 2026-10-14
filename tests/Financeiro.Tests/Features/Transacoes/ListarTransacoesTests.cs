@@ -4,7 +4,9 @@ using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Domain.ValueObjects;
 using Financeiro.Features.Transacoes;
+using Financeiro.Infrastructure.Persistence;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Financeiro.Tests.Features.Transacoes;
@@ -34,7 +36,8 @@ public class ListarTransacoesTests(PostgresFixture fixture) : IntegrationTestBas
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 
@@ -65,7 +68,8 @@ public class ListarTransacoesTests(PostgresFixture fixture) : IntegrationTestBas
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 
@@ -101,7 +105,8 @@ public class ListarTransacoesTests(PostgresFixture fixture) : IntegrationTestBas
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 
@@ -137,7 +142,8 @@ public class ListarTransacoesTests(PostgresFixture fixture) : IntegrationTestBas
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 

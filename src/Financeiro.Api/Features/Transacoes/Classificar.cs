@@ -27,6 +27,7 @@ public class Classificar : Endpoint<Classificar.FeatureRequest, TransacaoRespons
         var transacao = await _context.Transacoes
             .Include(t => t.Conta)
             .Include(t => t.Categoria)
+            .Include(t => t.Tags)
             .SingleOrDefaultAsync(t => t.Id == request.Id, ct);
 
         if (transacao is null)
@@ -45,7 +46,7 @@ public class Classificar : Endpoint<Classificar.FeatureRequest, TransacaoRespons
         }
 
         // D-012: se qualquer TagId não existir, retorna 404 (não ignora silenciosamente)
-        var tagIds = request.TagIds ?? new List<Guid>();
+        var tagIds = request.TagIds ?? [];
         var tags = await _context.Tags
             .Where(t => tagIds.Contains(t.Id))
             .ToListAsync(ct);

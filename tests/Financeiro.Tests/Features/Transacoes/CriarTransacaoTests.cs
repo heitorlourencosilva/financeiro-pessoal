@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Features.Transacoes;
+using Financeiro.Infrastructure.Persistence;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Financeiro.Tests.Features.Transacoes;
@@ -16,7 +18,8 @@ public class CriarTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -58,7 +61,8 @@ public class CriarTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -91,7 +95,8 @@ public class CriarTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -120,7 +125,8 @@ public class CriarTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("XP", TipoConta.Investimento, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -172,7 +178,8 @@ public class CriarTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -197,7 +204,8 @@ public class CriarTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -222,7 +230,8 @@ public class CriarTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -247,7 +256,8 @@ public class CriarTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
@@ -272,7 +282,8 @@ public class CriarTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();

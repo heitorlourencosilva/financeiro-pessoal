@@ -4,7 +4,9 @@ using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Domain.ValueObjects;
 using Financeiro.Features.Transacoes;
+using Financeiro.Infrastructure.Persistence;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Financeiro.Tests.Features.Transacoes;
@@ -17,7 +19,8 @@ public class ObterTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, "Nu Pagamentos");
         context.Contas.Add(conta);
 
@@ -74,7 +77,8 @@ public class ObterTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         var categoria = new Categoria("Alimentação", null);
         context.Contas.Add(conta);
@@ -113,7 +117,8 @@ public class ObterTransacaoTests(PostgresFixture fixture) : IntegrationTestBase(
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 

@@ -50,11 +50,8 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         await Factory.DisposeAsync();
     }
 
-    protected async Task<FinanceiroDbContext> GetDbContextAsync()
-    {
-        var scope = Factory.Services.CreateScope();
-        return scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
-    }
+    protected AsyncServiceScope CreateAsyncScope()
+        => Factory.Services.CreateAsyncScope();
 
     protected async Task ClearDatabaseAsync()
     {

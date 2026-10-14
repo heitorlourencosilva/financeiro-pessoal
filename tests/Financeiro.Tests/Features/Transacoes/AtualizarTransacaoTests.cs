@@ -4,7 +4,9 @@ using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Domain.ValueObjects;
 using Financeiro.Features.Transacoes;
+using Financeiro.Infrastructure.Persistence;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Financeiro.Tests.Features.Transacoes;
@@ -17,7 +19,8 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 
@@ -34,7 +37,6 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         await context.SaveChangesAsync();
 
         var request = new Atualizar.FeatureRequest(
-            Id: transacao.Id,
             Data: new DateOnly(2024, 10, 20),
             Descricao: "Salário Atualizado",
             Valor: 5500m,
@@ -67,14 +69,14 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
         await context.SaveChangesAsync();
 
         var idInexistente = Guid.NewGuid();
         var request = new Atualizar.FeatureRequest(
-            Id: idInexistente,
             Data: new DateOnly(2024, 10, 20),
             Descricao: "Teste",
             Valor: 100m,
@@ -97,7 +99,8 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 
@@ -115,7 +118,6 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
 
         var contaIdInexistente = Guid.NewGuid();
         var request = new Atualizar.FeatureRequest(
-            Id: transacao.Id,
             Data: new DateOnly(2024, 10, 20),
             Descricao: "Teste",
             Valor: 100m,
@@ -138,7 +140,8 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta1 = new Conta("Nubank", TipoConta.ContaCorrente, null);
         var conta2 = new Conta("Inter", TipoConta.ContaCorrente, null);
         context.Contas.AddRange(conta1, conta2);
@@ -156,7 +159,6 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         await context.SaveChangesAsync();
 
         var request = new Atualizar.FeatureRequest(
-            Id: transacao.Id,
             Data: transacao.Data,
             Descricao: transacao.DescricaoOriginal,
             Valor: transacao.Valor.Valor,
@@ -184,7 +186,8 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 
@@ -201,7 +204,6 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         await context.SaveChangesAsync();
 
         var request = new Atualizar.FeatureRequest(
-            Id: transacao.Id,
             Data: default,
             Descricao: "Teste",
             Valor: 100m,
@@ -224,7 +226,8 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 
@@ -241,7 +244,6 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         await context.SaveChangesAsync();
 
         var request = new Atualizar.FeatureRequest(
-            Id: transacao.Id,
             Data: new DateOnly(2024, 10, 15),
             Descricao: "",
             Valor: 100m,
@@ -264,7 +266,8 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         // Arrange
         await ClearDatabaseAsync();
 
-        await using var context = await GetDbContextAsync();
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
         context.Contas.Add(conta);
 
@@ -281,7 +284,6 @@ public class AtualizarTransacaoTests(PostgresFixture fixture) : IntegrationTestB
         await context.SaveChangesAsync();
 
         var request = new Atualizar.FeatureRequest(
-            Id: transacao.Id,
             Data: new DateOnly(2024, 10, 15),
             Descricao: "Teste",
             Valor: 0m,
