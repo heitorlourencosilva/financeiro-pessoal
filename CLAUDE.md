@@ -33,6 +33,34 @@ dotnet watch run --project src/Financeiro.Api
 
 No lint command is configured; `TreatWarningsAsErrors` is `false` in the API project.
 
+## Local Configuration & HTTPS
+
+### Connection String (user-secrets)
+
+A connection string **não** fica no `appsettings.json` — foi removida para não versionar a senha. Ela vive em `dotnet user-secrets`, vinculada ao `UserSecretsId` declarado em `Financeiro.Api.csproj`.
+
+```bash
+# Configurar (uma vez, dev local)
+dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=financeiro;Username=financeiro;Password=financeiro" --project src/Financeiro.Api
+
+# Listar
+dotnet user-secrets list --project src/Financeiro.Api
+```
+
+- **Dev local:** `dotnet run` e `dotnet watch` leem os secrets automaticamente.
+- **Testes de integração:** não dependem disso — `PostgresFixture` injeta a connection string do Testcontainer via `WebApplicationFactory`.
+- **CI / produção:** usar variável de ambiente `ConnectionStrings__Postgres` (duplo underscore substitui os dois-pontos).
+- **Sem connection string configurada:** `Program.cs` lança `InvalidOperationException("Connection string 'Postgres' não configurada.")` no startup — falha rápida e explícita.
+
+### HTTPS / TLS termination
+
+A API **não** usa `app.UseHttpsRedirection()` nem `app.UseHsts()`. O TLS é terminado por um **proxy reverso externo** (com o certificado), que fala HTTP com a API na rede interna.
+
+- **Dev local:** `dotnet run` serve HTTP puro — sem redirect.
+- **Testes de integração:** `WebApplicationFactory` usa HTTP; a ausência de redirect evita 307 inesperados.
+- **Produção:** o proxy (ex.: nginx, Caddy, Traefik) é responsável por TLS e por redirecionar HTTP→HTTPS externamente.
+- **Consequência:** se um dia a API for exposta diretamente (sem proxy), será preciso reintroduzir `UseHttpsRedirection()` e `UseHsts()` — idealmente condicionados a `!app.Environment.IsDevelopment()`.
+
 ## Architecture
 
 ### Single-Project Domain
@@ -100,7 +128,7 @@ The data ingestion pipeline is partially implemented:
 - ✅ Review queue: `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar` + `FilaRevisaoTests`
 - ✅ Shared `TransacaoResponse` (eliminated 7 duplicated response records)
 - ✅ Blazor Server scaffolding (App.razor, Routes.razor, MainLayout.razor) — components not yet built
-- ✅ Test suite: 130 tests passing
+- ✅ Test suite: 132 tests passing
 - ❌ Blazor components (business screens not started)
 - ❌ Dashboard + reports (next step)
 

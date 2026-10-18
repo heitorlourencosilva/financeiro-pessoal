@@ -18,7 +18,7 @@ public class Atualizar : Endpoint<Atualizar.FeatureRequest, TransacaoResponse>
 
     public override void Configure()
     {
-        Put("/api/transacoes/{id}");
+        Put("/api/transacoes/{Id}");
         AllowAnonymous();
     }
 

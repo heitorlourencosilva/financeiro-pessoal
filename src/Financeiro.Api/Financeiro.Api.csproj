@@ -8,6 +8,7 @@
     <AssemblyName>Financeiro.Api</AssemblyName>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <InvariantGlobalization>false</InvariantGlobalization>
+    <UserSecretsId>1a25dfb2-37cd-4981-932a-29ac4cf0a5e4</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

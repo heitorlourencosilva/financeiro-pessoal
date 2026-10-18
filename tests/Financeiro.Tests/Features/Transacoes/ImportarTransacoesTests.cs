@@ -82,7 +82,8 @@ public class ImportarTransacoesTests(PostgresFixture fixture) : IntegrationTestB
         result!.Importadas.Should().Be(29);
         result.Erros.Should().BeEmpty();
 
-        var contextAssert = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        await using var contextAssertScope = CreateAsyncScope();
+        var contextAssert = contextAssertScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var transacoes = await contextAssert.Transacoes
             .Where(t => t.ContaId == conta.Id)
             .ToListAsync();
@@ -113,8 +114,9 @@ public class ImportarTransacoesTests(PostgresFixture fixture) : IntegrationTestB
         // Act
         await Client.PostAsync("/api/transacoes/importar", form);
 
-        // Assert        
-        var contextAssert = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        // Assert
+        await using var contextAssertScope = CreateAsyncScope();
+        var contextAssert = contextAssertScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
 
         var despesas = await contextAssert.Transacoes
             .Where(t => t.ContaId == conta.Id && t.Natureza == NaturezaTransacao.Despesa)
@@ -145,7 +147,8 @@ public class ImportarTransacoesTests(PostgresFixture fixture) : IntegrationTestB
         await Client.PostAsync("/api/transacoes/importar", form);
 
         // Assert
-        var contextAssert = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        await using var contextAssertScope = CreateAsyncScope();
+        var contextAssert = contextAssertScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var transacao = await contextAssert.Transacoes
             .SingleAsync(t => t.ContaId == conta.Id);
 
@@ -171,7 +174,8 @@ public class ImportarTransacoesTests(PostgresFixture fixture) : IntegrationTestB
         await Client.PostAsync("/api/transacoes/importar", form);
 
         // Assert
-        var contextAssert = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        await using var contextAssertScope = CreateAsyncScope();
+        var contextAssert = contextAssertScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var tributos = await contextAssert.Transacoes
             .Where(t => t.ContaId == conta.Id &&
                         t.DescricaoOriginal == "PAGAMENTO TRIBUTO DAS")
@@ -279,7 +283,8 @@ public class ImportarTransacoesTests(PostgresFixture fixture) : IntegrationTestB
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-        var contextAssert = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        await using var contextAssertScope = CreateAsyncScope();
+        var contextAssert = contextAssertScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var total = await contextAssert.Transacoes.CountAsync();
         total.Should().Be(0);
     }

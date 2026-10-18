@@ -118,7 +118,6 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         await context.SaveChangesAsync();
 
         var request = new Classificar.FeatureRequest(
-            Id: transacao.Id,
             CategoriaId: categoria.Id,
             Contexto: Contexto.Pessoal,
             Pessoa: Pessoa.Eu,
@@ -151,15 +150,16 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         context.Categorias.Add(categoria);
         await context.SaveChangesAsync();
 
+        var id = Guid.NewGuid();
+
         var request = new Classificar.FeatureRequest(
-            Id: Guid.NewGuid(),
             CategoriaId: categoria.Id,
             Contexto: Contexto.Pessoal,
             Pessoa: Pessoa.Eu,
             TagIds: null);
 
         // Act
-        var response = await Client.PutAsJsonAsync($"/api/transacoes/{request.Id}/classificar", request);
+        var response = await Client.PutAsJsonAsync($"/api/transacoes/{id}/classificar", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -181,7 +181,6 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         await context.SaveChangesAsync();
 
         var request = new Classificar.FeatureRequest(
-            Id: transacao.Id,
             CategoriaId: Guid.NewGuid(),
             Contexto: Contexto.Pessoal,
             Pessoa: Pessoa.Eu,
@@ -215,7 +214,6 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         await context.SaveChangesAsync();
 
         var request = new Classificar.FeatureRequest(
-            Id: transacao.Id,
             CategoriaId: categoria.Id,
             Contexto: Contexto.Pessoal,
             Pessoa: Pessoa.Eu,
@@ -255,7 +253,6 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         await context.SaveChangesAsync();
 
         var request = new Classificar.FeatureRequest(
-            Id: transacao.Id,
             CategoriaId: categoria.Id,
             Contexto: Contexto.Pessoal,
             Pessoa: Pessoa.Eu,
@@ -293,7 +290,6 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         await context.SaveChangesAsync();
 
         var request = new Classificar.FeatureRequest(
-            Id: transacao.Id,
             CategoriaId: Guid.Empty,
             Contexto: Contexto.Pessoal,
             Pessoa: Pessoa.Eu,
@@ -327,9 +323,9 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         await context.SaveChangesAsync();
 
         // Act
-        var response = await Client.PutAsJsonAsync(
+        var response = await Client.PutAsync(
             $"/api/transacoes/{transacao.Id}/desclassificar",
-            new Desclassificar.FeatureRequest(transacao.Id));
+            null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -349,9 +345,9 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         var id = Guid.NewGuid();
 
         // Act
-        var response = await Client.PutAsJsonAsync(
+        var response = await Client.PutAsync(
             $"/api/transacoes/{id}/desclassificar",
-            new Desclassificar.FeatureRequest(id));
+            null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -373,9 +369,9 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         await context.SaveChangesAsync();
 
         // Act
-        var response = await Client.PutAsJsonAsync(
+        var response = await Client.PutAsync(
             $"/api/transacoes/{transacao.Id}/desclassificar",
-            new Desclassificar.FeatureRequest(transacao.Id));
+            null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -385,5 +381,134 @@ public class FilaRevisaoTests(PostgresFixture fixture) : IntegrationTestBase(fix
         result!.Classificada.Should().BeFalse();
         result!.CategoriaId.Should().BeNull();
         result!.ClassificadaEm.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Desclassificar_TransacaoComTags_RemoveTagsDoBanco()
+    {
+        // Arrange
+        await ClearDatabaseAsync();
+
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+
+        var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
+        var categoria = new Categoria("Alimentação");
+        var tag1 = new Tag("viagem");
+        var tag2 = new Tag("trabalho");
+        context.Contas.Add(conta);
+        context.Categorias.Add(categoria);
+        context.Tags.AddRange(tag1, tag2);
+
+        var transacao = new Transacao(
+            new DateOnly(2024, 10, 10),
+            "Mercado",
+            new Dinheiro(100m, "BRL"),
+            NaturezaTransacao.Despesa,
+            conta,
+            Contexto.Pessoal,
+            Pessoa.Eu);
+
+        transacao.Classificar(categoria, Contexto.Pessoal, Pessoa.Eu, new[] { tag1, tag2 });
+        context.Transacoes.Add(transacao);
+        await context.SaveChangesAsync();
+
+        // Act
+        var response = await Client.PutAsync(
+            $"/api/transacoes/{transacao.Id}/desclassificar",
+            null);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        await using var verifyScope = CreateAsyncScope();
+        var verify = verifyScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+
+        var transacaoNoBanco = await verify.Transacoes
+            .Include(t => t.Tags)
+            .SingleAsync(t => t.Id == transacao.Id);
+
+        transacaoNoBanco.Classificada.Should().BeFalse();
+        transacaoNoBanco.CategoriaId.Should().BeNull();
+        transacaoNoBanco.Tags.Should().BeEmpty();
+
+        var tagsNoBanco = await verify.Tags.CountAsync();
+        tagsNoBanco.Should().Be(2); // tags não são deletadas, apenas o vínculo
+
+        var vinculos = await verify.Database
+            .SqlQueryRaw<int>("SELECT COUNT(*)::int AS \"Value\" FROM transacao_tags WHERE transacao_id = {0}", transacao.Id)
+            .SingleAsync();
+        vinculos.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Classificar_TransacaoJaClassificada_SobrescreveClassificacao()
+    {
+        // Arrange
+        await ClearDatabaseAsync();
+
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+
+        var conta = new Conta("Nubank", TipoConta.ContaCorrente, null);
+        var categoriaOriginal = new Categoria("Alimentação");
+        var categoriaNova = new Categoria("Transporte");
+        var tagOriginal = new Tag("viagem");
+        var tagNova = new Tag("trabalho");
+        context.Contas.Add(conta);
+        context.Categorias.AddRange(categoriaOriginal, categoriaNova);
+        context.Tags.AddRange(tagOriginal, tagNova);
+
+        var transacao = new Transacao(
+            new DateOnly(2024, 10, 10),
+            "Mercado",
+            new Dinheiro(100m, "BRL"),
+            NaturezaTransacao.Despesa,
+            conta,
+            Contexto.Pessoal,
+            Pessoa.Eu);
+
+        transacao.Classificar(
+            categoriaOriginal,
+            Contexto.Pessoal,
+            Pessoa.Eu,
+            new[] { tagOriginal });
+        context.Transacoes.Add(transacao);
+        await context.SaveChangesAsync();
+
+        var request = new Classificar.FeatureRequest(
+            CategoriaId: categoriaNova.Id,
+            Contexto: Contexto.YouTube,
+            Pessoa: Pessoa.Conjuge,
+            TagIds: new List<Guid> { tagNova.Id });
+
+        // Act
+        var response = await Client.PutAsJsonAsync(
+            $"/api/transacoes/{transacao.Id}/classificar",
+            request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var result = await response.Content.ReadFromJsonAsync<TransacaoResponse>();
+        result.Should().NotBeNull();
+        result!.Classificada.Should().BeTrue();
+        result.CategoriaId.Should().Be(categoriaNova.Id);
+        result.CategoriaNome.Should().Be("Transporte");
+        result.Contexto.Should().Be(Contexto.YouTube);
+        result.Pessoa.Should().Be(Pessoa.Conjuge);
+
+        await using var verifyScope = CreateAsyncScope();
+        var verify = verifyScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+
+        var transacaoNoBanco = await verify.Transacoes
+            .Include(t => t.Tags)
+            .SingleAsync(t => t.Id == transacao.Id);
+
+        transacaoNoBanco.CategoriaId.Should().Be(categoriaNova.Id);
+        transacaoNoBanco.Contexto.Should().Be(Contexto.YouTube);
+        transacaoNoBanco.Pessoa.Should().Be(Pessoa.Conjuge);
+        transacaoNoBanco.Tags.Should().HaveCount(1);
+        transacaoNoBanco.Tags.Single().Id.Should().Be(tagNova.Id);
     }
 }

@@ -1,12 +1,10 @@
-using Financeiro.Domain.Entities;
-using Financeiro.Domain.Enums;
 using Financeiro.Infrastructure.Persistence;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace Financeiro.Features.Transacoes;
 
-public class Desclassificar : Endpoint<Desclassificar.FeatureRequest, TransacaoResponse>
+public class Desclassificar : EndpointWithoutRequest<TransacaoResponse>
 {
     private readonly FinanceiroDbContext _context;
 
@@ -21,12 +19,15 @@ public class Desclassificar : Endpoint<Desclassificar.FeatureRequest, TransacaoR
         AllowAnonymous();
     }
 
-    public override async Task HandleAsync(FeatureRequest request, CancellationToken ct)
+    public override async Task HandleAsync(CancellationToken ct)
     {
+        var id = Route<Guid>("id");
+
         var transacao = await _context.Transacoes
             .Include(t => t.Conta)
             .Include(t => t.Categoria)
-            .SingleOrDefaultAsync(t => t.Id == request.Id, ct);
+            .Include(t => t.Tags)
+            .SingleOrDefaultAsync(t => t.Id == id, ct);
 
         if (transacao is null)
         {
@@ -40,6 +41,4 @@ public class Desclassificar : Endpoint<Desclassificar.FeatureRequest, TransacaoR
 
         await SendOkAsync(TransacaoResponse.FromTransacao(transacao), ct);
     }
-
-    public record FeatureRequest(Guid Id);
 }

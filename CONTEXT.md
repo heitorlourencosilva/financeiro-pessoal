@@ -262,7 +262,7 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
   - `Include(Tags)` removido de endpoints que não expõem tags
   - `Desclassificar` limpa Tags
   - Namespace `Financeiro.Infrastructure.Persistence` (sem `.Api.` no meio)
-- **Suíte total:** 130 testes passando (47 domínio + 83 integração)
+- **Suíte total:** 132 testes passando (51 domínio + 81 integração)
 
 **Próximo passo:**
 - Dashboard + relatórios (composição, fluxo de caixa, por conta, por categoria)

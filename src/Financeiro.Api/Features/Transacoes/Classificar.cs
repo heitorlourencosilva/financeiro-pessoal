@@ -1,4 +1,3 @@
-using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Infrastructure.Persistence;
 using FastEndpoints;
@@ -24,11 +23,13 @@ public class Classificar : Endpoint<Classificar.FeatureRequest, TransacaoRespons
 
     public override async Task HandleAsync(FeatureRequest request, CancellationToken ct)
     {
+        var id = Route<Guid>("id");
+
         var transacao = await _context.Transacoes
             .Include(t => t.Conta)
             .Include(t => t.Categoria)
             .Include(t => t.Tags)
-            .SingleOrDefaultAsync(t => t.Id == request.Id, ct);
+            .SingleOrDefaultAsync(t => t.Id == id, ct);
 
         if (transacao is null)
         {
@@ -65,7 +66,6 @@ public class Classificar : Endpoint<Classificar.FeatureRequest, TransacaoRespons
     }
 
     public record FeatureRequest(
-        Guid Id,
         Guid CategoriaId,
         Contexto Contexto,
         Pessoa Pessoa,
