@@ -128,7 +128,7 @@ The data ingestion pipeline is partially implemented:
 - ✅ Review queue: `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar` + `FilaRevisaoTests`
 - ✅ Shared `TransacaoResponse` (eliminated 7 duplicated response records)
 - ✅ Blazor Server scaffolding (App.razor, Routes.razor, MainLayout.razor) — components not yet built
-- ✅ Test suite: 132 tests passing
+- ✅ Test suite: 142 tests passing
 - ❌ Blazor components (business screens not started)
 - ❌ Dashboard + reports (next step)
 

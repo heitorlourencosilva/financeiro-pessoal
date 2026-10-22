@@ -6,14 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Financeiro.Features.Transacoes;
 
-public class Listar : EndpointWithoutRequest<TransacaoResponse[]>
+public class Listar : Endpoint<FiltrosTransacoesRequest, TransacaoResponse[]>
 {
     private readonly FinanceiroDbContext _context;
 
-    public Listar(FinanceiroDbContext context)
-    {
-        _context = context;
-    }
+    public Listar(FinanceiroDbContext context) => _context = context;
 
     public override void Configure()
     {
@@ -21,11 +18,21 @@ public class Listar : EndpointWithoutRequest<TransacaoResponse[]>
         AllowAnonymous();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
+    public override async Task HandleAsync(FiltrosTransacoesRequest req, CancellationToken ct)
     {
-        var transacoes = await _context.Transacoes
+        var query = _context.Transacoes
             .Include(t => t.Conta)
             .Include(t => t.Categoria)
+            .AsQueryable();
+
+        if (req.DataInicio.HasValue) query = query.Where(t => t.Data >= req.DataInicio.Value);
+        if (req.DataFim.HasValue) query = query.Where(t => t.Data <= req.DataFim.Value);
+        if (req.CategoriaId.HasValue) query = query.Where(t => t.CategoriaId == req.CategoriaId.Value);
+        if (req.Contexto.HasValue) query = query.Where(t => t.Contexto == req.Contexto.Value);
+        if (req.Pessoa.HasValue) query = query.Where(t => t.Pessoa == req.Pessoa.Value);
+        if (req.TagId.HasValue) query = query.Where(t => t.Tags.Any(tg => tg.Id == req.TagId.Value));
+
+        var transacoes = await query
             .OrderByDescending(t => t.Data)
             .Select(t => TransacaoResponse.FromTransacao(t))
             .ToArrayAsync(ct);
@@ -33,3 +40,11 @@ public class Listar : EndpointWithoutRequest<TransacaoResponse[]>
         await SendOkAsync(transacoes, ct);
     }
 }
+
+public record FiltrosTransacoesRequest(
+    DateOnly? DataInicio = null,
+    DateOnly? DataFim = null,
+    Guid? CategoriaId = null,
+    Contexto? Contexto = null,
+    Pessoa? Pessoa = null,
+    Guid? TagId = null);

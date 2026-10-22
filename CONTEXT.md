@@ -69,6 +69,7 @@ Conta bancária é **meio**, não contexto. Contexto é atributo da transação.
 - Rateio de transação (uma linha → várias transações)
 - Acesso remoto seguro (VPN/Tailscale)
 - TV Box com Linux como servidor
+- Fluxo de caixa projetado (recorrências/lançamentos futuros) — MVP entrega apenas realizado
 
 ## Fluxo de Entrada de Dados
 
@@ -113,6 +114,7 @@ Sugestão por histórico → Fila de revisão → Classificação final
 | D-016 | 2026-10-12 | `Desclassificar` limpa as Tags associadas além de remover a categoria |
 | D-017 | 2026-10-12 | Reclassificação é permitida — chamar `Classificar` em transação já classificada sobrescreve a classificação anterior sem erro |
 | D-018 | 2026-10-12 | `FeatureResponse` de transações é compartilhado em `TransacaoResponse` (record único), eliminando duplicação entre endpoints |
+| D-019 | 2026-10-20 | Dashboard MVP entrega fluxo de caixa **realizado** apenas; projeção futura (recorrências/agendamentos) fica como evolução, dependente de decisão de modelo própria |
 
 ## Como Trabalhar Neste Projeto
 
@@ -262,7 +264,7 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
   - `Include(Tags)` removido de endpoints que não expõem tags
   - `Desclassificar` limpa Tags
   - Namespace `Financeiro.Infrastructure.Persistence` (sem `.Api.` no meio)
-- **Suíte total:** 132 testes passando (51 domínio + 81 integração)
+- **Suíte total:** 142 testes passando (51 domínio + 91 integração)
 
 **Próximo passo:**
 - Dashboard + relatórios (composição, fluxo de caixa, por conta, por categoria)
