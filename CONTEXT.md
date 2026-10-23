@@ -52,11 +52,11 @@ Conta bancária é **meio**, não contexto. Contexto é atributo da transação.
 2. Normalização de transações
 3. Classificação multi-eixo
 4. Regras automáticas + sugestão por histórico + fila de revisão
-5. Dashboard: composição + fluxo de caixa projetado
-6. Relatório por conta (com total no final)
-7. Filtros por período, categoria, tags, contexto, pessoa
-8. Visão sintética, analítica e drill-down
-9. Comparação por período e por categoria
+5. ✅ Dashboard: composição + fluxo de caixa realizado (D-019)
+6. ✅ Relatório por conta (com total no final)
+7. ✅ Filtros por período, categoria, tags, contexto, pessoa
+8. ✅ Visão sintética, analítica e drill-down (backend ✅; UI ⏳)
+9. ✅ Comparação por período e por categoria
 10. Testes automatizados em todos os níveis
 
 ## Fora do MVP (Evolução)
@@ -79,7 +79,7 @@ Sugestão por histórico → Fila de revisão → Classificação final
 ## Decisões de Produto
 
 - Comparação = períodos (A) + categorias (B). Real vs. orçado fica fora.
-- Dashboard MVP = composição (B) + fluxo de caixa projetado (C).
+- Dashboard MVP = composição (B) + fluxo de caixa realizado (C) — ver D-019.
 - Analítico/Sintético = agregado vs. detalhe, com drill-down.
 - Relatório por conta é separado, com total no final.
 - Frontend começa simples: tabelas e números antes de gráficos sofisticados.
@@ -115,6 +115,7 @@ Sugestão por histórico → Fila de revisão → Classificação final
 | D-017 | 2026-10-12 | Reclassificação é permitida — chamar `Classificar` em transação já classificada sobrescreve a classificação anterior sem erro |
 | D-018 | 2026-10-12 | `FeatureResponse` de transações é compartilhado em `TransacaoResponse` (record único), eliminando duplicação entre endpoints |
 | D-019 | 2026-10-20 | Dashboard MVP entrega fluxo de caixa **realizado** apenas; projeção futura (recorrências/agendamentos) fica como evolução, dependente de decisão de modelo própria |
+| D-020 | 2026-10-22 | Toda resposta da IA deve informar o percentual estimado de contexto em uso no final |
 
 ## Como Trabalhar Neste Projeto
 
@@ -125,6 +126,7 @@ Sugestão por histórico → Fila de revisão → Classificação final
 3. **Uma tarefa por vez.** Não tente implementar múltiplas features de uma vez.
 4. **Testes junto com código.** Nenhuma feature entra sem teste.
 5. **Não invente requisitos.** Se não está no CONTEXT.md nem no status atual, não existe.
+6. **Reportar uso de contexto:** ao final de cada resposta, informar o percentual estimado da janela de contexto em uso.
 
 ### Estrutura Física do Projeto
 
@@ -264,10 +266,21 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
   - `Include(Tags)` removido de endpoints que não expõem tags
   - `Desclassificar` limpa Tags
   - Namespace `Financeiro.Infrastructure.Persistence` (sem `.Api.` no meio)
-- **Suíte total:** 142 testes passando (51 domínio + 91 integração)
+- Filtros na listagem de transações (dataInicio, dataFim, categoriaId, contexto, pessoa, tagId) — 9 testes
+- Relatório por conta com total no final (GET /api/relatorios/por-conta) — 5 testes
+- Composição por categoria (GET /api/relatorios/composicao) — 6 testes
+- Fluxo de caixa realizado (GET /api/relatorios/fluxo-caixa) — 6 testes (D-019: sem projeção)
+- Comparação por período e categoria (GET /api/relatorios/comparacao) — 6 testes
+- **Suíte total:** 164 testes passando (51 domínio + 113 integração)
 
 **Próximo passo:**
-- Dashboard + relatórios (composição, fluxo de caixa, por conta, por categoria)
+- **Fase 2 — Frontend Blazor + MudBlazor:** telas consumindo os endpoints de relatório
+  - Página de relatório por conta (tabela + total no final)
+  - Página de composição (tabelas de receitas/despesas por categoria)
+  - Página de fluxo de caixa realizado (tabela diária + totais)
+  - Página de comparação A vs B (por período + categoria)
+  - Filtros de período/categoria/contexto/pessoa/tag nas listagens
+  - Drill-down: sintético → analítico
 
 **Pendências de decisão:**
 - Como tratar `TipoConta.CartaoCredito` na importação? (fatura vem em XLSX, relação 1:N com transações)

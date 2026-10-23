@@ -97,7 +97,7 @@ Despite the stack table in `CONTEXT.md` showing separate layers, the actual impl
 
 The data ingestion pipeline is partially implemented:
 
-1. ✅ Import CSV/OFX (CSV Itaú done; OFX pending)
+1. ✅ Import CSV Itaú ✅; OFX ⏳
 2. ✅ Normalize (applied automatically by `Transacao` constructor and `Atualizar`)
 3. ⏳ Apply rules
 4. ⏳ Suggest by history
@@ -128,11 +128,17 @@ The data ingestion pipeline is partially implemented:
 - ✅ Review queue: `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar` + `FilaRevisaoTests`
 - ✅ Shared `TransacaoResponse` (eliminated 7 duplicated response records)
 - ✅ Blazor Server scaffolding (App.razor, Routes.razor, MainLayout.razor) — components not yet built
-- ✅ Test suite: 142 tests passing
+- ✅ Filtros na listagem de transações (período, categoria, contexto, pessoa, tagId)
+- ✅ Relatório por conta (com total no final)
+- ✅ Composição por categoria (GET /api/relatorios/composicao)
+- ✅ Fluxo de caixa realizado (GET /api/relatorios/fluxo-caixa) — sem projeção (D-019)
+- ✅ Comparação por período e categoria (GET /api/relatorios/comparacao)
+- ✅ Test suite: 164 tests passing
+- Fase 1 do dashboard (endpoints de relatório) completa.
+- Próximo passo: telas Blazor consumindo os endpoints (Fase 2)
 - ❌ Blazor components (business screens not started)
-- ❌ Dashboard + reports (next step)
 
-**Next step per `CONTEXT.md`:** dashboard + reports.
+**Next step per CONTEXT.md:** Fase 2 — telas Blazor consumindo os endpoints de relatório.
 
 ## Conventions
 
