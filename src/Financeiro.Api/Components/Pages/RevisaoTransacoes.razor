@@ -1,0 +1,286 @@
+@page "/transacoes/revisao"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Revisão de transações</PageTitle>
+
+<section class="report-page">
+    <header class="report-header">
+        <div>
+            <MudText Typo="Typo.h4" Class="report-title">Revisão</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Classifique transações pendentes ou mantenha os dados sem classificação.</MudText>
+        </div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Dark" StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="CarregarAsync" Disabled="_carregando">Atualizar</MudButton>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(_erro))
+    {
+        <div class="error-panel" role="alert">@_erro</div>
+    }
+    else if (_carregando)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Dark" />
+    }
+    else
+    {
+        <MudTable Items="_pendentes" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm"
+                  Class="paper-table" aria-label="Fila de revisão">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">@(_pendentes.Length) pendente(s)</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Data</MudTh>
+                <MudTh>Descrição</MudTh>
+                <MudTh>Conta</MudTh>
+                <MudTh>Valor</MudTh>
+                <MudTh>Ação</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Data">@context.Data.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="Descrição">@context.DescricaoNormalizada</MudTd>
+                <MudTd DataLabel="Conta">@context.ContaNome</MudTd>
+                <MudTd DataLabel="Valor">@Formatar(context.Valor)</MudTd>
+                <MudTd DataLabel="Ação">
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Dark"
+                               OnClick="@(() => Selecionar(context))">Classificar</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        @if (_pendentes.Length == 0)
+        {
+            <div class="empty-state">Nenhuma transação aguarda classificação.</div>
+        }
+
+        @if (_selecionada is not null)
+        {
+            <aside class="classification-panel" aria-label="Classificação da transação">
+                <div class="classification-heading">
+                    <div>
+                        <MudText Typo="Typo.h6">@_selecionada.DescricaoNormalizada</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            @_selecionada.Data.ToString("dd/MM/yyyy") · @_selecionada.ContaNome · @Formatar(_selecionada.Valor)
+                        </MudText>
+                    </div>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="Fechar classificação"
+                                   OnClick="Fechar" />
+                </div>
+
+                <div class="classification-grid">
+                    <MudSelect T="string" Label="Categoria" @bind-Value="_categoriaId" Variant="Variant.Outlined">
+                        @foreach (var categoria in _categorias)
+                        {
+                            <MudSelectItem T="string" Value="@categoria.Id.ToString()">@categoria.Nome</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect T="string" Label="Contexto" @bind-Value="_contexto" Variant="Variant.Outlined">
+                        @foreach (var contexto in Enum.GetNames<Contexto>())
+                        {
+                            <MudSelectItem T="string" Value="@contexto">@contexto</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect T="string" Label="Pessoa" @bind-Value="_pessoa" Variant="Variant.Outlined">
+                        @foreach (var pessoa in Enum.GetNames<Pessoa>())
+                        {
+                            <MudSelectItem T="string" Value="@pessoa">@pessoa</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+
+                <fieldset class="tag-picker">
+                    <legend>Tags</legend>
+                    @foreach (var tag in _tags)
+                    {
+                        <label>
+                            <input type="checkbox" checked="@_tagIds.Contains(tag.Id)"
+                                   @onchange="@(args => AlternarTag(tag.Id, args))" />
+                            @tag.Nome
+                        </label>
+                    }
+                </fieldset>
+
+                <div class="form-actions">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Dark"
+                               OnClick="DesclassificarAsync" Disabled="_salvando">Manter pendente</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Dark"
+                               OnClick="ClassificarAsync" Disabled="_salvando">Salvar classificação</MudButton>
+                </div>
+            </aside>
+        }
+    }
+</section>
+
+@code {
+    private TransacaoOpcao[] _pendentes = [];
+    private CategoriaOpcao[] _categorias = [];
+    private TagOpcao[] _tags = [];
+    private TransacaoOpcao? _selecionada;
+    private readonly HashSet<Guid> _tagIds = [];
+    private string _categoriaId = string.Empty;
+    private string _contexto = nameof(Contexto.Pessoal);
+    private string _pessoa = nameof(Pessoa.Eu);
+    private string? _erro;
+    private bool _carregando;
+    private bool _salvando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarOpcoesAsync();
+        await CarregarAsync();
+    }
+
+    private async Task CarregarOpcoesAsync()
+    {
+        try
+        {
+            using var client = CriarClient();
+            _categorias = await client.GetFromJsonAsync<CategoriaOpcao[]>("/api/categorias") ?? [];
+            _tags = await client.GetFromJsonAsync<TagOpcao[]>("/api/tags") ?? [];
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar categorias e tags.";
+        }
+    }
+
+    private async Task CarregarAsync()
+    {
+        _carregando = true;
+        _erro = null;
+        _selecionada = null;
+        try
+        {
+            using var client = CriarClient();
+            _pendentes = await client.GetFromJsonAsync<TransacaoOpcao[]>("/api/transacoes/pendentes") ?? [];
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar a fila de revisão.";
+            _pendentes = [];
+        }
+        finally
+        {
+            _carregando = false;
+        }
+    }
+
+    private void Selecionar(TransacaoOpcao transacao)
+    {
+        _selecionada = transacao;
+        _categoriaId = transacao.CategoriaId?.ToString() ?? string.Empty;
+        _contexto = transacao.Contexto.ToString();
+        _pessoa = transacao.Pessoa.ToString();
+        _tagIds.Clear();
+        _erro = null;
+    }
+
+    private void Fechar()
+    {
+        _selecionada = null;
+        _tagIds.Clear();
+    }
+
+    private void AlternarTag(Guid tagId, ChangeEventArgs args)
+    {
+        if (args.Value is true)
+            _tagIds.Add(tagId);
+        else
+            _tagIds.Remove(tagId);
+    }
+
+    private async Task ClassificarAsync()
+    {
+        if (_selecionada is null)
+            return;
+        if (!Guid.TryParse(_categoriaId, out var categoriaId))
+        {
+            _erro = "Selecione uma categoria.";
+            return;
+        }
+
+        _salvando = true;
+        _erro = null;
+        try
+        {
+            var payload = new
+            {
+                categoriaId,
+                contexto = Enum.Parse<Contexto>(_contexto),
+                pessoa = Enum.Parse<Pessoa>(_pessoa),
+                tagIds = _tagIds.ToList()
+            };
+
+            using var client = CriarClient();
+            var resposta = await client.PutAsJsonAsync($"/api/transacoes/{_selecionada.Id}/classificar", payload);
+            if (!resposta.IsSuccessStatusCode)
+            {
+                _erro = "Não foi possível classificar a transação.";
+                return;
+            }
+
+            Snackbar.Add("Transação classificada.", Severity.Success);
+            await CarregarAsync();
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível classificar a transação.";
+        }
+        finally
+        {
+            _salvando = false;
+        }
+    }
+
+    private async Task DesclassificarAsync()
+    {
+        if (_selecionada is null)
+            return;
+
+        _salvando = true;
+        _erro = null;
+        try
+        {
+            using var client = CriarClient();
+            using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/transacoes/{_selecionada.Id}/desclassificar");
+            request.Content = JsonContent.Create(new { });
+            var resposta = await client.SendAsync(request);
+            if (!resposta.IsSuccessStatusCode)
+            {
+                _erro = "Não foi possível manter a transação pendente.";
+                return;
+            }
+
+            Snackbar.Add("Dados de classificação removidos.", Severity.Info);
+            await CarregarAsync();
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível manter a transação pendente.";
+        }
+        finally
+        {
+            _salvando = false;
+        }
+    }
+
+    private HttpClient CriarClient()
+    {
+        var client = HttpClientFactory.CreateClient();
+        client.BaseAddress = new Uri(Navigation.BaseUri);
+        return client;
+    }
+
+    private static string Formatar(decimal valor) =>
+        valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+
+    public sealed record TransacaoOpcao(
+        Guid Id, DateOnly Data, string Descricao, string? DescricaoNormalizada, decimal Valor,
+        string Moeda, NaturezaTransacao Natureza, Guid ContaId, string ContaNome,
+        Guid? CategoriaId, string? CategoriaNome, Contexto Contexto, Pessoa Pessoa,
+        bool Classificada, string? Observacao, DateTime ImportadaEm, DateTime? ClassificadaEm);
+    public sealed record CategoriaOpcao(Guid Id, string Nome, Guid? CategoriaPaiId);
+    public sealed record TagOpcao(Guid Id, string Nome);
+}

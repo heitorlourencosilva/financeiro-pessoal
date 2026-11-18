@@ -277,10 +277,14 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Listagem analítica de transações com filtros de período, categoria, contexto, pessoa e tag
 - Drill-down sintético → analítico na lista de transações
 - Endpoints de opções para categorias e tags
-- **Suíte total:** 171 testes passando (incluindo 5 testes Bunit)
+- Tela Blazor de criação manual de transações
+- Tela Blazor da fila de revisão, com classificação e desclassificação
+- Navegação para criação e revisão de transações
+- Testes Bunit de criação e revisão de transações
+- **Suíte total:** 173 testes passando (incluindo 7 testes Bunit)
 
 **Próximo passo:**
-- Telas Blazor de criação, classificação e revisão de transações
+- Regras automáticas e sugestão por histórico na classificação de transações
 
 **Pendências de decisão:**
 - Como tratar `TipoConta.CartaoCredito` na importação? (fatura vem em XLSX, relação 1:N com transações)

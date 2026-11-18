@@ -138,11 +138,14 @@ The data ingestion pipeline is partially implemented:
 - ✅ Listagem analítica de transações com filtros de período, categoria, contexto, pessoa e tag
 - ✅ Drill-down para detalhes da transação selecionada
 - ✅ Endpoints de opções para categorias e tags
-- ✅ Test suite: 171 testes passando (incluindo 5 testes Bunit)
+- ✅ Tela de criação manual de transações
+- ✅ Tela da fila de revisão com classificação e desclassificação
+- ✅ Navegação Blazor para criação e revisão
+- ✅ Test suite: 173 testes passando (incluindo 7 testes Bunit)
 - Fase 1 do dashboard (endpoints de relatório) completa.
 - Fase 2 do dashboard (telas Blazor dos relatórios) completa.
 - Fase de filtros e drill-down da listagem de transações completa.
-- Próximo passo: telas de criação, classificação e revisão de transações
+- Próximo passo: regras automáticas e sugestão por histórico
 
 **Next step per CONTEXT.md:** telas de criação, classificação e revisão de transações.
 

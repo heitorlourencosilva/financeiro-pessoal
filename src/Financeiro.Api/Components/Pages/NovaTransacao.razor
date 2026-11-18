@@ -1,0 +1,169 @@
+@page "/transacoes/nova"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Nova transação</PageTitle>
+
+<section class="report-page">
+    <header class="report-header">
+        <div>
+            <MudText Typo="Typo.h4" Class="report-title">Nova transação</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Registre uma movimentação manual. Ela entra na fila de revisão até ser classificada.</MudText>
+        </div>
+    </header>
+
+    <div class="transaction-form paper-panel">
+        @if (!string.IsNullOrWhiteSpace(_erro))
+        {
+            <div class="error-panel" role="alert">@_erro</div>
+        }
+
+        <MudTextField T="string" Label="Descrição" @bind-Value="_descricao" MaxLength="200"
+                      Variant="Variant.Outlined" Immediate="true" />
+        <MudTextField T="string" Label="Data" InputType="InputType.Date" @bind-Value="_data"
+                      Variant="Variant.Outlined" />
+        <MudNumericField T="decimal" Label="Valor" @bind-Value="_valor" Min="0.01m"
+                         Variant="Variant.Outlined" Format="N2" Culture="@_cultura" />
+        <MudSelect T="string" Label="Natureza" @bind-Value="_natureza" Variant="Variant.Outlined">
+            @foreach (var natureza in Enum.GetNames<NaturezaTransacao>())
+            {
+                <MudSelectItem T="string" Value="@natureza">@natureza</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="string" Label="Conta" @bind-Value="_contaId" Variant="Variant.Outlined">
+            @foreach (var conta in _contas.Where(c => c.Ativa))
+            {
+                <MudSelectItem T="string" Value="@conta.Id.ToString()">@conta.Nome</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="string" Label="Contexto" @bind-Value="_contexto" Variant="Variant.Outlined">
+            @foreach (var contexto in Enum.GetNames<Contexto>())
+            {
+                <MudSelectItem T="string" Value="@contexto">@contexto</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="string" Label="Pessoa" @bind-Value="_pessoa" Variant="Variant.Outlined">
+            @foreach (var pessoa in Enum.GetNames<Pessoa>())
+            {
+                <MudSelectItem T="string" Value="@pessoa">@pessoa</MudSelectItem>
+            }
+        </MudSelect>
+
+        <div class="form-actions">
+            <MudButton Variant="Variant.Outlined" Color="Color.Dark" Href="/transacoes">Cancelar</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Dark" OnClick="CriarAsync" Disabled="_salvando">
+                @if (_salvando)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                }
+                Criar transação
+            </MudButton>
+        </div>
+    </div>
+</section>
+
+@code {
+    private readonly System.Globalization.CultureInfo _cultura =
+        System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+
+    private ContaOpcao[] _contas = [];
+    private string _descricao = string.Empty;
+    private string? _data;
+    private decimal _valor;
+    private string _natureza = nameof(NaturezaTransacao.Despesa);
+    private string _contaId = string.Empty;
+    private string _contexto = nameof(Contexto.Pessoal);
+    private string _pessoa = nameof(Pessoa.Eu);
+    private string? _erro;
+    private bool _salvando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _data = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd");
+        await CarregarContasAsync();
+    }
+
+    private async Task CarregarContasAsync()
+    {
+        try
+        {
+            using var client = CriarClient();
+            _contas = await client.GetFromJsonAsync<ContaOpcao[]>("/api/contas") ?? [];
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar as contas.";
+        }
+    }
+
+    private async Task CriarAsync()
+    {
+        _erro = null;
+
+        if (string.IsNullOrWhiteSpace(_descricao))
+        {
+            _erro = "Informe a descrição da transação.";
+            return;
+        }
+        if (!DateOnly.TryParse(_data, out var data))
+        {
+            _erro = "Informe uma data válida.";
+            return;
+        }
+        if (_valor <= 0m)
+        {
+            _erro = "O valor deve ser maior que zero.";
+            return;
+        }
+        if (!Guid.TryParse(_contaId, out var contaId))
+        {
+            _erro = "Selecione uma conta.";
+            return;
+        }
+
+        _salvando = true;
+        try
+        {
+            var payload = new
+            {
+                data,
+                descricao = _descricao,
+                valor = _valor,
+                natureza = Enum.Parse<NaturezaTransacao>(_natureza),
+                contaId,
+                contexto = Enum.Parse<Contexto>(_contexto),
+                pessoa = Enum.Parse<Pessoa>(_pessoa)
+            };
+
+            using var client = CriarClient();
+            var resposta = await client.PostAsJsonAsync("/api/transacoes", payload);
+            if (!resposta.IsSuccessStatusCode)
+            {
+                _erro = "Não foi possível criar a transação.";
+                return;
+            }
+
+            Snackbar.Add("Transação criada e enviada para revisão.", Severity.Success);
+            Navigation.NavigateTo("/transacoes/revisao");
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível criar a transação.";
+        }
+        finally
+        {
+            _salvando = false;
+        }
+    }
+
+    private HttpClient CriarClient()
+    {
+        var client = HttpClientFactory.CreateClient();
+        client.BaseAddress = new Uri(Navigation.BaseUri);
+        return client;
+    }
+
+    public sealed record ContaOpcao(Guid Id, string Nome, TipoConta Tipo, string? Instituicao, bool Ativa, DateTime CriadaEm);
+}

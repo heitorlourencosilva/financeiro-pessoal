@@ -195,6 +195,80 @@ body {
     grid-column: 1 / -1;
 }
 
+.paper-panel {
+    background: var(--finance-paper);
+    border: 1px solid var(--finance-line);
+}
+
+.transaction-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding: 1.25rem;
+}
+
+.transaction-form .error-panel,
+.transaction-form .form-actions {
+    grid-column: 1 / -1;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    margin-top: 0.25rem;
+}
+
+.empty-state {
+    margin-top: 0.75rem;
+    padding: 1.25rem;
+    border: 1px dashed var(--finance-line);
+    color: var(--finance-muted);
+    background: var(--finance-paper);
+}
+
+.classification-panel {
+    margin-top: 0.75rem;
+    padding: 1.25rem;
+    background: var(--finance-paper);
+    border: 1px solid var(--finance-line);
+    border-left: 3px solid var(--finance-green);
+}
+
+.classification-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.classification-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.tag-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin: 1rem 0 0;
+    padding: 0.75rem;
+    border: 1px solid var(--finance-line);
+}
+
+.tag-picker legend {
+    color: var(--finance-muted);
+    padding: 0 0.35rem;
+}
+
+.tag-picker label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
 @media (max-width: 960px) {
     .main-content {
         padding: calc(var(--mud-appbar-height) + 1rem) 1rem 1.25rem;
@@ -221,6 +295,24 @@ body {
 
     .transaction-detail {
         grid-template-columns: 1fr;
+    }
+
+    .transaction-form,
+    .classification-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .transaction-form .error-panel,
+    .transaction-form .form-actions {
+        grid-column: auto;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .form-actions .mud-button-root {
+        width: 100%;
     }
 }
 

@@ -67,6 +67,28 @@ public sealed class RelatoriosBlazorTests
             corte.Markup.Should().Contain("Comparação"));
     }
 
+    [Fact]
+    public void NovaTransacao_RenderizaFormulario()
+    {
+        using var contexto = CriarContexto();
+
+        var corte = contexto.RenderComponent<NovaTransacao>();
+
+        corte.WaitForAssertion(() =>
+            corte.Markup.Should().Contain("Nova transação"));
+    }
+
+    [Fact]
+    public void RevisaoTransacoes_RenderizaFila()
+    {
+        using var contexto = CriarContexto();
+
+        var corte = contexto.RenderComponent<RevisaoTransacoes>();
+
+        corte.WaitForAssertion(() =>
+            corte.Markup.Should().Contain("Nenhuma transação aguarda classificação"));
+    }
+
     private static TestContext CriarContexto(string json)
     {
         var contexto = new TestContext();
