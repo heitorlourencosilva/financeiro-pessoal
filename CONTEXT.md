@@ -44,7 +44,7 @@ Conta bancária é **meio**, não contexto. Contexto é atributo da transação.
 - **D-006:** Modelo de dados evolui para família/investimentos sem reescrita.
 - **D-007:** Contexto e Pessoa são enum agora. Migração para tabela é evolução controlada.
 - **D-008:** Moeda BRL no MVP, mas `Dinheiro` já carrega moeda.
-- **D-011:** Atualize CLAUDE.md e CONTEXT.md conforme trabalha. Documentação reflete código.
+- **D-011:** Atualize AGENTS.md e CONTEXT.md conforme trabalha. Documentação reflete código.
 
 ## Escopo do MVP
 
@@ -106,7 +106,7 @@ Sugestão por histórico → Fila de revisão → Classificação final
 | D-008 | 2026-10-10 | BRL no MVP, Dinheiro com moeda |
 | D-009 | 2026-10-10 | Estrutura enxuta: 2 projetos |
 | D-010 | 2026-10-10 | Frontend: Blazor Server + MudBlazor |
-| D-011 | 2026-10-11 | Atualizar CLAUDE.md e CONTEXT.md conforme trabalha |
+| D-011 | 2026-10-11 | Atualizar AGENTS.md e CONTEXT.md conforme trabalha |
 | D-012 | 2026-10-12 | Classificar retorna 404 se qualquer TagId não existir (não ignora silenciosamente) |
 | D-013 | 2026-10-12 | Endpoints PUT com FeatureRequest vazio exigem Content-Type application/json; cliente envia corpo `{}` |
 | D-014 | 2026-10-12 | Normalização de descrição é regra de domínio; vive em `Financeiro.Domain.Services.DescricaoNormalizador` e é aplicada pelo construtor de `Transacao` e por `Atualizar`, nunca nos endpoints |

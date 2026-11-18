@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -163,4 +163,4 @@ When creating or modifying UI code (HTML, CSS, component layout):
 
 ## Progress Tracking
 
-**Update CLAUDE.md and CONTEXT.md as you work.** After completing a task, update both files to reflect the current state of implementation. This ensures the documentation stays synchronized with the code and serves as the source of truth for the project status.
+**Update AGENTS.md and CONTEXT.md as you work.** After completing a task, update both files to reflect the current state of implementation. This ensures the documentation stays synchronized with the code and serves as the source of truth for the project status.
