@@ -1,0 +1,118 @@
+@page "/relatorios/comparacao"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Comparação de períodos</PageTitle>
+
+<section class="report-page">
+    <header class="report-header">
+        <div>
+            <MudText Typo="Typo.h4" Class="report-title">Comparação</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Compare períodos e categorias lado a lado.</MudText>
+        </div>
+    </header>
+
+    <div class="filter-strip" role="group" aria-label="Filtros da comparação">
+        <MudTextField T="string" Label="Período A — início" InputType="InputType.Date" @bind-Value="_aInicio" Class="filter-field" />
+        <MudTextField T="string" Label="Período A — fim" InputType="InputType.Date" @bind-Value="_aFim" Class="filter-field" />
+        <MudTextField T="string" Label="Período B — início" InputType="InputType.Date" @bind-Value="_bInicio" Class="filter-field" />
+        <MudTextField T="string" Label="Período B — fim" InputType="InputType.Date" @bind-Value="_bFim" Class="filter-field" />
+        <MudButton Variant="Variant.Filled" Color="Color.Dark" StartIcon="@Icons.Material.Filled.CompareArrows"
+                   OnClick="CarregarAsync" Disabled="_carregando">Comparar</MudButton>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_erro))
+    {
+        <div class="error-panel" role="alert">@_erro</div>
+    }
+    else if (_carregando)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Dark" />
+    }
+    else if (_resposta is not null)
+    {
+        <div class="summary-grid">
+            <div class="summary-item"><MudText Typo="Typo.caption" Class="summary-label">A — receitas</MudText><div class="summary-value positive">@Formatar(_resposta.PeriodoA.TotalReceitas)</div></div>
+            <div class="summary-item expense"><MudText Typo="Typo.caption" Class="summary-label">A — despesas</MudText><div class="summary-value negative">@Formatar(_resposta.PeriodoA.TotalDespesas)</div></div>
+            <div class="summary-item"><MudText Typo="Typo.caption" Class="summary-label">B — receitas</MudText><div class="summary-value positive">@Formatar(_resposta.PeriodoB.TotalReceitas)</div></div>
+            <div class="summary-item expense"><MudText Typo="Typo.caption" Class="summary-label">B — despesas</MudText><div class="summary-value negative">@Formatar(_resposta.PeriodoB.TotalDespesas)</div></div>
+        </div>
+
+        <MudTabs Elevation="0" Rounded="true" ActivePanelIndex="0">
+            <MudTabPanel Text="Receitas">
+                <MudTable Items="_resposta.Receitas" Hover="true" Dense="true" Class="paper-table" aria-label="Comparação de receitas">
+                    <HeaderContent><MudTh>Categoria</MudTh><MudTh>Período A</MudTh><MudTh>Período B</MudTh><MudTh>Diferença</MudTh><MudTh>Variação</MudTh></HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Categoria">@context.CategoriaNome</MudTd>
+                        <MudTd DataLabel="Período A">@Formatar(context.TotalA)</MudTd>
+                        <MudTd DataLabel="Período B">@Formatar(context.TotalB)</MudTd>
+                        <MudTd DataLabel="Diferença"><span class="@DiferencaClasse(context.Diferenca)">@Formatar(context.Diferenca)</span></MudTd>
+                        <MudTd DataLabel="Variação">@(context.VariacaoPercentual.HasValue ? context.VariacaoPercentual.Value.ToString("0.0") + "%" : "—")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+            <MudTabPanel Text="Despesas">
+                <MudTable Items="_resposta.Despesas" Hover="true" Dense="true" Class="paper-table" aria-label="Comparação de despesas">
+                    <HeaderContent><MudTh>Categoria</MudTh><MudTh>Período A</MudTh><MudTh>Período B</MudTh><MudTh>Diferença</MudTh><MudTh>Variação</MudTh></HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Categoria">@context.CategoriaNome</MudTd>
+                        <MudTd DataLabel="Período A">@Formatar(context.TotalA)</MudTd>
+                        <MudTd DataLabel="Período B">@Formatar(context.TotalB)</MudTd>
+                        <MudTd DataLabel="Diferença"><span class="@DiferencaClasse(context.Diferenca)">@Formatar(context.Diferenca)</span></MudTd>
+                        <MudTd DataLabel="Variação">@(context.VariacaoPercentual.HasValue ? context.VariacaoPercentual.Value.ToString("0.0") + "%" : "—")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</section>
+
+@code {
+    private ComparacaoResponse? _resposta;
+    private string? _aInicio, _aFim, _bInicio, _bFim;
+    private string? _erro;
+    private bool _carregando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var inicioMes = new DateOnly(hoje.Year, hoje.Month, 1);
+        _bInicio = inicioMes.ToString("yyyy-MM-dd");
+        _bFim = hoje.ToString("yyyy-MM-dd");
+        var mesAnteriorFim = inicioMes.AddDays(-1);
+        var mesAnteriorInicio = new DateOnly(mesAnteriorFim.Year, mesAnteriorFim.Month, 1);
+        _aInicio = mesAnteriorInicio.ToString("yyyy-MM-dd");
+        _aFim = mesAnteriorFim.ToString("yyyy-MM-dd");
+        await CarregarAsync();
+    }
+
+    private async Task CarregarAsync()
+    {
+        if (!DateOnly.TryParse(_aInicio, out var aInicio) || !DateOnly.TryParse(_aFim, out var aFim)
+            || !DateOnly.TryParse(_bInicio, out var bInicio) || !DateOnly.TryParse(_bFim, out var bFim))
+        {
+            _erro = "Informe os quatro períodos da comparação.";
+            return;
+        }
+
+        _carregando = true;
+        _erro = null;
+        try
+        {
+            using var client = HttpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(Navigation.BaseUri);
+            var url = $"/api/relatorios/comparacao?periodoAInicio={aInicio:yyyy-MM-dd}&periodoAFim={aFim:yyyy-MM-dd}&periodoBInicio={bInicio:yyyy-MM-dd}&periodoBFim={bFim:yyyy-MM-dd}";
+            _resposta = await client.GetFromJsonAsync<ComparacaoResponse>(url);
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar a comparação de períodos.";
+        }
+        finally { _carregando = false; }
+    }
+
+    private static string Formatar(decimal valor) =>
+        valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+    private static string DiferencaClasse(decimal diferenca) => diferenca >= 0m ? "positive" : "negative";
+}

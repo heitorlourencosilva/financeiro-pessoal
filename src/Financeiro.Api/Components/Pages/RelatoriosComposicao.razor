@@ -1,0 +1,99 @@
+@page "/relatorios/composicao"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Composição por categoria</PageTitle>
+
+<section class="report-page">
+    <header class="report-header">
+        <div>
+            <MudText Typo="Typo.h4" Class="report-title">Composição</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Receitas e despesas agrupadas por categoria.</MudText>
+        </div>
+    </header>
+
+    <div class="filter-strip" role="group" aria-label="Filtros da composição">
+        <MudTextField T="string" Label="Data inicial" InputType="InputType.Date" @bind-Value="_inicio" Class="filter-field" />
+        <MudTextField T="string" Label="Data final" InputType="InputType.Date" @bind-Value="_fim" Class="filter-field" />
+        <MudButton Variant="Variant.Filled" Color="Color.Dark" StartIcon="@Icons.Material.Filled.Search"
+                   OnClick="CarregarAsync" Disabled="_carregando">Consultar</MudButton>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_erro))
+    {
+        <div class="error-panel" role="alert">@_erro</div>
+    }
+    else if (_carregando)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Dark" />
+    }
+    else if (_resposta is not null)
+    {
+        <div class="summary-grid">
+            <div class="summary-item">
+                <MudText Typo="Typo.caption" Class="summary-label">Total de receitas</MudText>
+                <div class="summary-value positive">@Formatar(_resposta.Receitas.Sum(x => x.Total))</div>
+            </div>
+            <div class="summary-item expense">
+                <MudText Typo="Typo.caption" Class="summary-label">Total de despesas</MudText>
+                <div class="summary-value negative">@Formatar(_resposta.Despesas.Sum(x => x.Total))</div>
+            </div>
+        </div>
+
+        <div class="summary-grid">
+            <MudTable Items="_resposta.Receitas" Hover="true" Dense="true" Class="paper-table"
+                      aria-label="Receitas por categoria">
+                <ToolBarContent><MudText Typo="Typo.h6">Receitas</MudText></ToolBarContent>
+                <HeaderContent><MudTh>Categoria</MudTh><MudTh>Total</MudTh></HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Categoria">@context.CategoriaNome</MudTd>
+                    <MudTd DataLabel="Total">@Formatar(context.Total)</MudTd>
+                </RowTemplate>
+            </MudTable>
+            <MudTable Items="_resposta.Despesas" Hover="true" Dense="true" Class="paper-table"
+                      aria-label="Despesas por categoria">
+                <ToolBarContent><MudText Typo="Typo.h6">Despesas</MudText></ToolBarContent>
+                <HeaderContent><MudTh>Categoria</MudTh><MudTh>Total</MudTh></HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Categoria">@context.CategoriaNome</MudTd>
+                    <MudTd DataLabel="Total">@Formatar(context.Total)</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </div>
+    }
+</section>
+
+@code {
+    private ComposicaoResponse? _resposta;
+    private string? _inicio;
+    private string? _fim;
+    private string? _erro;
+    private bool _carregando;
+
+    protected override async Task OnInitializedAsync() => await CarregarAsync();
+
+    private async Task CarregarAsync()
+    {
+        _carregando = true;
+        _erro = null;
+        try
+        {
+            var query = new List<string>();
+            if (DateOnly.TryParse(_inicio, out var inicio)) query.Add($"dataInicio={inicio:yyyy-MM-dd}");
+            if (DateOnly.TryParse(_fim, out var fim)) query.Add($"dataFim={fim:yyyy-MM-dd}");
+            var url = "/api/relatorios/composicao" + (query.Count == 0 ? "" : "?" + string.Join("&", query));
+            using var client = HttpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(Navigation.BaseUri);
+            _resposta = await client.GetFromJsonAsync<ComposicaoResponse>(url);
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar a composição por categoria.";
+        }
+        finally { _carregando = false; }
+    }
+
+    private static string Formatar(decimal valor) =>
+        valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+}

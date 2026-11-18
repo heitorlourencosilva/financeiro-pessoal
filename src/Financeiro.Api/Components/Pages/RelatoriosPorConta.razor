@@ -1,0 +1,137 @@
+@page "/"
+@page "/relatorios/por-conta"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Relatório por conta</PageTitle>
+
+<section class="report-page">
+    <header class="report-header">
+        <div>
+            <MudText Typo="Typo.h4" Class="report-title">Por conta</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Receitas, despesas e movimentos neutros por conta.</MudText>
+        </div>
+    </header>
+
+    <div class="filter-strip" role="group" aria-label="Filtros do relatório por conta">
+        <MudTextField T="string" Label="Data inicial" InputType="InputType.Date"
+                      @bind-Value="_dataInicio" Class="filter-field" />
+        <MudTextField T="string" Label="Data final" InputType="InputType.Date"
+                      @bind-Value="_dataFim" Class="filter-field" />
+        <MudButton Variant="Variant.Filled" Color="Color.Dark"
+                   StartIcon="@Icons.Material.Filled.Search"
+                   OnClick="CarregarAsync" Disabled="_carregando">
+            Consultar
+        </MudButton>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_erro))
+    {
+        <div class="error-panel" role="alert">@_erro</div>
+    }
+    else if (_carregando)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Dark" />
+    }
+    else if (_resposta is not null)
+    {
+        <div class="summary-grid" aria-label="Resumo geral">
+            <div class="summary-item">
+                <MudText Typo="Typo.caption" Class="summary-label">Receitas</MudText>
+                <div class="summary-value positive">@Formatar(_resposta.Total.TotalReceitas)</div>
+            </div>
+            <div class="summary-item expense">
+                <MudText Typo="Typo.caption" Class="summary-label">Despesas</MudText>
+                <div class="summary-value negative">@Formatar(_resposta.Total.TotalDespesas)</div>
+            </div>
+            <div class="summary-item">
+                <MudText Typo="Typo.caption" Class="summary-label">Transferências</MudText>
+                <div class="summary-value">@Formatar(_resposta.Total.TotalTransferencias)</div>
+            </div>
+            <div class="summary-item">
+                <MudText Typo="Typo.caption" Class="summary-label">Saldo do período</MudText>
+                <div class="summary-value @SaldoClasse(_resposta.Total.SaldoPeriodo)">
+                    @Formatar(_resposta.Total.SaldoPeriodo)
+                </div>
+            </div>
+        </div>
+
+        <MudTable Items="_resposta.Linhas" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm"
+                  Class="paper-table" aria-label="Valores por conta">
+            <HeaderContent>
+                <MudTh>Conta</MudTh>
+                <MudTh>Receitas</MudTh>
+                <MudTh>Despesas</MudTh>
+                <MudTh>Transferências</MudTh>
+                <MudTh>Investimentos</MudTh>
+                <MudTh>Saldo</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Conta">@context.ContaNome</MudTd>
+                <MudTd DataLabel="Receitas">@Formatar(context.TotalReceitas)</MudTd>
+                <MudTd DataLabel="Despesas">@Formatar(context.TotalDespesas)</MudTd>
+                <MudTd DataLabel="Transferências">@Formatar(context.TotalTransferencias)</MudTd>
+                <MudTd DataLabel="Investimentos">@Formatar(context.TotalInvestimentos)</MudTd>
+                <MudTd DataLabel="Saldo">
+                    <span class="@SaldoClasse(context.SaldoPeriodo)">@Formatar(context.SaldoPeriodo)</span>
+                </MudTd>
+            </RowTemplate>
+            <FooterContent>
+                <MudTd Class="total-row">@(_resposta.Total.ContaNome)</MudTd>
+                <MudTd Class="total-row">@Formatar(_resposta.Total.TotalReceitas)</MudTd>
+                <MudTd Class="total-row">@Formatar(_resposta.Total.TotalDespesas)</MudTd>
+                <MudTd Class="total-row">@Formatar(_resposta.Total.TotalTransferencias)</MudTd>
+                <MudTd Class="total-row">@Formatar(_resposta.Total.TotalInvestimentos)</MudTd>
+                <MudTd Class="total-row">@Formatar(_resposta.Total.SaldoPeriodo)</MudTd>
+            </FooterContent>
+        </MudTable>
+    }
+</section>
+
+@code {
+    private RelatorioPorContaResponse? _resposta;
+    private string? _dataInicio;
+    private string? _dataFim;
+    private string? _erro;
+    private bool _carregando;
+
+    protected override async Task OnInitializedAsync() => await CarregarAsync();
+
+    private async Task CarregarAsync()
+    {
+        _carregando = true;
+        _erro = null;
+
+        try
+        {
+            var query = new List<string>();
+            if (DateOnly.TryParse(_dataInicio, out var inicio))
+                query.Add($"dataInicio={inicio:yyyy-MM-dd}");
+            if (DateOnly.TryParse(_dataFim, out var fim))
+                query.Add($"dataFim={fim:yyyy-MM-dd}");
+
+            var url = "/api/relatorios/por-conta";
+            if (query.Count > 0)
+                url += "?" + string.Join("&", query);
+
+            using var client = HttpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(Navigation.BaseUri);
+            _resposta = await client.GetFromJsonAsync<RelatorioPorContaResponse>(url);
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar o relatório por conta.";
+        }
+        finally
+        {
+            _carregando = false;
+        }
+    }
+
+    private static string Formatar(decimal valor) =>
+        valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+
+    private static string SaldoClasse(decimal saldo) =>
+        saldo >= 0m ? "positive" : "negative";
+}

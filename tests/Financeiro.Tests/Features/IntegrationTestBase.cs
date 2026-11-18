@@ -27,6 +27,8 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         Factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
+                builder.UseSetting("ConnectionStrings:Postgres", _fixture.ConnectionString);
+
                 builder.ConfigureServices(services =>
                 {
                     services.RemoveAll<DbContextOptions<FinanceiroDbContext>>();

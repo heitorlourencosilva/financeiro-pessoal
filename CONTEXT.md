@@ -271,16 +271,13 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Composição por categoria (GET /api/relatorios/composicao) — 6 testes
 - Fluxo de caixa realizado (GET /api/relatorios/fluxo-caixa) — 6 testes (D-019: sem projeção)
 - Comparação por período e categoria (GET /api/relatorios/comparacao) — 6 testes
-- **Suíte total:** 164 testes passando (51 domínio + 113 integração)
+- Frontend Blazor + MudBlazor — telas dos relatórios (por conta, composição, fluxo realizado e comparação)
+- Navegação responsiva e filtros de período nas páginas de relatório
+- Testes Bunit dos quatro componentes de relatório
+- **Suíte total:** 168 testes passando (incluindo 4 testes Bunit dos componentes de relatório)
 
 **Próximo passo:**
-- **Fase 2 — Frontend Blazor + MudBlazor:** telas consumindo os endpoints de relatório
-  - Página de relatório por conta (tabela + total no final)
-  - Página de composição (tabelas de receitas/despesas por categoria)
-  - Página de fluxo de caixa realizado (tabela diária + totais)
-  - Página de comparação A vs B (por período + categoria)
-  - Filtros de período/categoria/contexto/pessoa/tag nas listagens
-  - Drill-down: sintético → analítico
+- Finalizar filtros nas listagens de transações e drill-down sintético → analítico
 
 **Pendências de decisão:**
 - Como tratar `TipoConta.CartaoCredito` na importação? (fatura vem em XLSX, relação 1:N com transações)

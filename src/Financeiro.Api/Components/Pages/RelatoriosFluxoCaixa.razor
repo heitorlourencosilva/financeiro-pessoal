@@ -1,0 +1,97 @@
+@page "/relatorios/fluxo-caixa"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Fluxo de caixa realizado</PageTitle>
+
+<section class="report-page">
+    <header class="report-header">
+        <div>
+            <MudText Typo="Typo.h4" Class="report-title">Fluxo realizado</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Movimentação diária sem projeções futuras.</MudText>
+        </div>
+    </header>
+
+    <div class="filter-strip" role="group" aria-label="Filtros do fluxo de caixa">
+        <MudTextField T="string" Label="Data inicial" InputType="InputType.Date" @bind-Value="_inicio" Class="filter-field" />
+        <MudTextField T="string" Label="Data final" InputType="InputType.Date" @bind-Value="_fim" Class="filter-field" />
+        <MudButton Variant="Variant.Filled" Color="Color.Dark" StartIcon="@Icons.Material.Filled.Search"
+                   OnClick="CarregarAsync" Disabled="_carregando">Consultar</MudButton>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_erro))
+    {
+        <div class="error-panel" role="alert">@_erro</div>
+    }
+    else if (_carregando)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Dark" />
+    }
+    else if (_resposta is not null)
+    {
+        <div class="summary-grid">
+            <div class="summary-item"><MudText Typo="Typo.caption" Class="summary-label">Saldo inicial</MudText><div class="summary-value">@Formatar(_resposta.SaldoInicial)</div></div>
+            <div class="summary-item"><MudText Typo="Typo.caption" Class="summary-label">Entradas</MudText><div class="summary-value positive">@Formatar(_resposta.TotalEntradas)</div></div>
+            <div class="summary-item expense"><MudText Typo="Typo.caption" Class="summary-label">Saídas</MudText><div class="summary-value negative">@Formatar(_resposta.TotalSaidas)</div></div>
+            <div class="summary-item"><MudText Typo="Typo.caption" Class="summary-label">Saldo final</MudText><div class="summary-value @SaldoClasse(_resposta.SaldoFinal)">@Formatar(_resposta.SaldoFinal)</div></div>
+        </div>
+
+        <MudTable Items="_resposta.Diario" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm"
+                  Class="paper-table" aria-label="Movimento diário">
+            <HeaderContent>
+                <MudTh>Data</MudTh><MudTh>Entradas</MudTh><MudTh>Saídas</MudTh><MudTh>Saldo acumulado</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Data">@context.Data.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="Entradas">@Formatar(context.Entradas)</MudTd>
+                <MudTd DataLabel="Saídas">@Formatar(context.Saidas)</MudTd>
+                <MudTd DataLabel="Saldo acumulado"><span class="@SaldoClasse(context.SaldoAcumulado)">@Formatar(context.SaldoAcumulado)</span></MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</section>
+
+@code {
+    private FluxoCaixaResponse? _resposta;
+    private string? _inicio;
+    private string? _fim;
+    private string? _erro;
+    private bool _carregando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        _inicio = hoje.AddDays(-29).ToString("yyyy-MM-dd");
+        _fim = hoje.ToString("yyyy-MM-dd");
+        await CarregarAsync();
+    }
+
+    private async Task CarregarAsync()
+    {
+        if (!DateOnly.TryParse(_inicio, out var inicio) || !DateOnly.TryParse(_fim, out var fim))
+        {
+            _erro = "Informe as duas datas do período.";
+            return;
+        }
+
+        _carregando = true;
+        _erro = null;
+        try
+        {
+            using var client = HttpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(Navigation.BaseUri);
+            var url = $"/api/relatorios/fluxo-caixa?dataInicio={inicio:yyyy-MM-dd}&dataFim={fim:yyyy-MM-dd}";
+            _resposta = await client.GetFromJsonAsync<FluxoCaixaResponse>(url);
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar o fluxo de caixa realizado.";
+        }
+        finally { _carregando = false; }
+    }
+
+    private static string Formatar(decimal valor) =>
+        valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+    private static string SaldoClasse(decimal saldo) => saldo >= 0m ? "positive" : "negative";
+}

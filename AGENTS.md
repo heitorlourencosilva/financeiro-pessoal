@@ -133,12 +133,14 @@ The data ingestion pipeline is partially implemented:
 - ✅ Composição por categoria (GET /api/relatorios/composicao)
 - ✅ Fluxo de caixa realizado (GET /api/relatorios/fluxo-caixa) — sem projeção (D-019)
 - ✅ Comparação por período e categoria (GET /api/relatorios/comparacao)
-- ✅ Test suite: 164 tests passing
+- ✅ Frontend Blazor + MudBlazor para relatórios por conta, composição, fluxo realizado e comparação
+- ✅ Testes Bunit dos componentes de relatório
+- ✅ Test suite: 168 testes passando (incluindo 4 testes Bunit de relatório)
 - Fase 1 do dashboard (endpoints de relatório) completa.
-- Próximo passo: telas Blazor consumindo os endpoints (Fase 2)
-- ❌ Blazor components (business screens not started)
+- Fase 2 do dashboard (telas Blazor dos relatórios) completa.
+- Próximo passo: filtros nas listagens de transações e drill-down sintético → analítico
 
-**Next step per CONTEXT.md:** Fase 2 — telas Blazor consumindo os endpoints de relatório.
+**Next step per CONTEXT.md:** finalizar filtros nas listagens e drill-down.
 
 ## Conventions
 
