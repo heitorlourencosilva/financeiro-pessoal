@@ -135,12 +135,16 @@ The data ingestion pipeline is partially implemented:
 - ✅ Comparação por período e categoria (GET /api/relatorios/comparacao)
 - ✅ Frontend Blazor + MudBlazor para relatórios por conta, composição, fluxo realizado e comparação
 - ✅ Testes Bunit dos componentes de relatório
-- ✅ Test suite: 168 testes passando (incluindo 4 testes Bunit de relatório)
+- ✅ Listagem analítica de transações com filtros de período, categoria, contexto, pessoa e tag
+- ✅ Drill-down para detalhes da transação selecionada
+- ✅ Endpoints de opções para categorias e tags
+- ✅ Test suite: 171 testes passando (incluindo 5 testes Bunit)
 - Fase 1 do dashboard (endpoints de relatório) completa.
 - Fase 2 do dashboard (telas Blazor dos relatórios) completa.
-- Próximo passo: filtros nas listagens de transações e drill-down sintético → analítico
+- Fase de filtros e drill-down da listagem de transações completa.
+- Próximo passo: telas de criação, classificação e revisão de transações
 
-**Next step per CONTEXT.md:** finalizar filtros nas listagens e drill-down.
+**Next step per CONTEXT.md:** telas de criação, classificação e revisão de transações.
 
 ## Conventions
 

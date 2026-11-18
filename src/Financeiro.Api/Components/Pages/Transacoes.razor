@@ -1,0 +1,219 @@
+@page "/transacoes"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Transações</PageTitle>
+
+<section class="report-page">
+    <header class="report-header">
+        <div>
+            <MudText Typo="Typo.h4" Class="report-title">Transações</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Lista analítica com filtros por período e classificação.</MudText>
+        </div>
+    </header>
+
+    <div class="filter-strip transaction-filters" role="group" aria-label="Filtros das transações">
+        <MudTextField T="string" Label="Data inicial" InputType="InputType.Date" @bind-Value="_inicio" Class="filter-field" />
+        <MudTextField T="string" Label="Data final" InputType="InputType.Date" @bind-Value="_fim" Class="filter-field" />
+        <MudSelect T="string" Label="Categoria" @bind-Value="_categoriaId" Class="filter-field">
+            <MudSelectItem T="string" Value="@string.Empty">Todas</MudSelectItem>
+            @foreach (var categoria in _categorias)
+            {
+                <MudSelectItem T="string" Value="@categoria.Id.ToString()">@categoria.Nome</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="string" Label="Contexto" @bind-Value="_contexto" Class="filter-field">
+            <MudSelectItem T="string" Value="@string.Empty">Todos</MudSelectItem>
+            @foreach (var contexto in Enum.GetNames<Contexto>())
+            {
+                <MudSelectItem T="string" Value="@contexto">@contexto</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="string" Label="Pessoa" @bind-Value="_pessoa" Class="filter-field">
+            <MudSelectItem T="string" Value="@string.Empty">Todas</MudSelectItem>
+            @foreach (var pessoa in Enum.GetNames<Pessoa>())
+            {
+                <MudSelectItem T="string" Value="@pessoa">@pessoa</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="string" Label="Tag" @bind-Value="_tagId" Class="filter-field">
+            <MudSelectItem T="string" Value="@string.Empty">Todas</MudSelectItem>
+            @foreach (var tag in _tags)
+            {
+                <MudSelectItem T="string" Value="@tag.Id.ToString()">@tag.Nome</MudSelectItem>
+            }
+        </MudSelect>
+        <MudButton Variant="Variant.Filled" Color="Color.Dark" StartIcon="@Icons.Material.Filled.Search"
+                   OnClick="CarregarAsync" Disabled="_carregando">Consultar</MudButton>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_erro))
+    {
+        <div class="error-panel" role="alert">@_erro</div>
+    }
+    else if (_carregando)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Dark" />
+    }
+    else
+    {
+        <MudTable Items="_transacoes" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm"
+                  Class="paper-table" aria-label="Lista de transações">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">@(_transacoes.Length) registro(s)</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Data</MudTh>
+                <MudTh>Descrição</MudTh>
+                <MudTh>Conta</MudTh>
+                <MudTh>Categoria</MudTh>
+                <MudTh>Natureza</MudTh>
+                <MudTh>Valor</MudTh>
+                <MudTh>Ação</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Data">@context.Data.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="Descrição">@context.DescricaoNormalizada</MudTd>
+                <MudTd DataLabel="Conta">@context.ContaNome</MudTd>
+                <MudTd DataLabel="Categoria">@(context.CategoriaNome ?? "Não classificada")</MudTd>
+                <MudTd DataLabel="Natureza">@context.Natureza</MudTd>
+                <MudTd DataLabel="Valor"><span class="@ValorClasse(context)">@Formatar(context.Valor)</span></MudTd>
+                <MudTd DataLabel="Ação">
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Dark"
+                               OnClick="@(() => SelecionarTransacao(context))">Detalhes</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        @if (_selecionada is not null)
+        {
+            <aside class="transaction-detail" aria-label="Detalhes da transação">
+                <div>
+                    <MudText Typo="Typo.h6">@_selecionada.DescricaoNormalizada</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@_selecionada.Descricao</MudText>
+                </div>
+                <div class="detail-grid">
+                    <span><small>Data</small>@_selecionada.Data.ToString("dd/MM/yyyy")</span>
+                    <span><small>Conta</small>@_selecionada.ContaNome</span>
+                    <span><small>Contexto</small>@_selecionada.Contexto</span>
+                    <span><small>Pessoa</small>@_selecionada.Pessoa</span>
+                    <span><small>Natureza</small>@_selecionada.Natureza</span>
+                    <span><small>Valor</small>@Formatar(_selecionada.Valor)</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(_selecionada.Observacao))
+                {
+                    <MudText Typo="Typo.body2" Class="detail-observation">@_selecionada.Observacao</MudText>
+                }
+            </aside>
+        }
+    }
+</section>
+
+@code {
+    private TransacaoResponse[] _transacoes = [];
+    private CategoriaOpcao[] _categorias = [];
+    private TagOpcao[] _tags = [];
+    private TransacaoResponse? _selecionada;
+    private string? _inicio;
+    private string? _fim;
+    private string _categoriaId = string.Empty;
+    private string _contexto = string.Empty;
+    private string _pessoa = string.Empty;
+    private string _tagId = string.Empty;
+    private string? _erro;
+    private bool _carregando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        _inicio = hoje.AddDays(-29).ToString("yyyy-MM-dd");
+        _fim = hoje.ToString("yyyy-MM-dd");
+        await CarregarOpcoesAsync();
+        await CarregarAsync();
+    }
+
+    private async Task CarregarOpcoesAsync()
+    {
+        using var client = CriarClient();
+        try
+        {
+            _categorias = await client.GetFromJsonAsync<CategoriaOpcao[]>("/api/categorias") ?? [];
+            _tags = await client.GetFromJsonAsync<TagOpcao[]>("/api/tags") ?? [];
+        }
+        catch (Exception)
+        {
+            _categorias = [];
+            _tags = [];
+        }
+    }
+
+    private async Task CarregarAsync()
+    {
+        _carregando = true;
+        _erro = null;
+        _selecionada = null;
+
+        try
+        {
+            var query = new List<string>();
+            if (DateOnly.TryParse(_inicio, out var inicio)) query.Add($"dataInicio={inicio:yyyy-MM-dd}");
+            if (DateOnly.TryParse(_fim, out var fim)) query.Add($"dataFim={fim:yyyy-MM-dd}");
+            if (!string.IsNullOrWhiteSpace(_categoriaId)) query.Add($"categoriaId={Uri.EscapeDataString(_categoriaId)}");
+            if (!string.IsNullOrWhiteSpace(_contexto)) query.Add($"contexto={Uri.EscapeDataString(_contexto)}");
+            if (!string.IsNullOrWhiteSpace(_pessoa)) query.Add($"pessoa={Uri.EscapeDataString(_pessoa)}");
+            if (!string.IsNullOrWhiteSpace(_tagId)) query.Add($"tagId={Uri.EscapeDataString(_tagId)}");
+
+            var url = "/api/transacoes" + (query.Count == 0 ? "" : "?" + string.Join("&", query));
+            using var client = CriarClient();
+            _transacoes = await client.GetFromJsonAsync<TransacaoResponse[]>(url) ?? [];
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar as transações.";
+            _transacoes = [];
+        }
+        finally
+        {
+            _carregando = false;
+        }
+    }
+
+    private HttpClient CriarClient()
+    {
+        var client = HttpClientFactory.CreateClient();
+        client.BaseAddress = new Uri(Navigation.BaseUri);
+        return client;
+    }
+
+    private void SelecionarTransacao(TransacaoResponse transacao) =>
+        _selecionada = transacao;
+
+    private static string ValorClasse(TransacaoResponse transacao) =>
+        transacao.Natureza is NaturezaTransacao.Despesa ? "negative" : "positive";
+
+    private static string Formatar(decimal valor) =>
+        valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+
+    public sealed record TransacaoResponse(
+        Guid Id,
+        DateOnly Data,
+        string Descricao,
+        string? DescricaoNormalizada,
+        decimal Valor,
+        string Moeda,
+        NaturezaTransacao Natureza,
+        Guid ContaId,
+        string ContaNome,
+        Guid? CategoriaId,
+        string? CategoriaNome,
+        Contexto Contexto,
+        Pessoa Pessoa,
+        bool Classificada,
+        string? Observacao,
+        DateTime ImportadaEm,
+        DateTime? ClassificadaEm);
+
+    public sealed record CategoriaOpcao(Guid Id, string Nome, Guid? CategoriaPaiId);
+    public sealed record TagOpcao(Guid Id, string Nome);
+}

@@ -273,11 +273,14 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Comparação por período e categoria (GET /api/relatorios/comparacao) — 6 testes
 - Frontend Blazor + MudBlazor — telas dos relatórios (por conta, composição, fluxo realizado e comparação)
 - Navegação responsiva e filtros de período nas páginas de relatório
-- Testes Bunit dos quatro componentes de relatório
-- **Suíte total:** 168 testes passando (incluindo 4 testes Bunit dos componentes de relatório)
+- Testes Bunit dos quatro componentes de relatório e da listagem de transações
+- Listagem analítica de transações com filtros de período, categoria, contexto, pessoa e tag
+- Drill-down sintético → analítico na lista de transações
+- Endpoints de opções para categorias e tags
+- **Suíte total:** 171 testes passando (incluindo 5 testes Bunit)
 
 **Próximo passo:**
-- Finalizar filtros nas listagens de transações e drill-down sintético → analítico
+- Telas Blazor de criação, classificação e revisão de transações
 
 **Pendências de decisão:**
 - Como tratar `TipoConta.CartaoCredito` na importação? (fatura vem em XLSX, relação 1:N com transações)

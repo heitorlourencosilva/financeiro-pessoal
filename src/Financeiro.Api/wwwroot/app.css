@@ -9,7 +9,8 @@
     --finance-paper: #fbfcfa;
 }
 
-html, body {
+html,
+body {
     min-height: 100%;
     background: var(--finance-bg);
     color: var(--finance-ink);
@@ -51,8 +52,8 @@ html, body {
 }
 
 .main-content {
-    min-height: calc(100vh - 64px);
-    padding: 2rem;
+    min-height: 100vh;
+    padding: calc(var(--mud-appbar-height) + 1.5rem) 2rem 2rem;
 }
 
 .report-page {
@@ -151,9 +152,52 @@ html, body {
     padding: 1rem;
 }
 
+.transaction-filters {
+    flex-wrap: wrap;
+}
+
+.transaction-filters .filter-field {
+    flex: 1 1 150px;
+}
+
+.selected-row td {
+    background: var(--finance-green-soft);
+}
+
+.transaction-detail {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    padding: 1rem;
+    background: var(--finance-paper);
+    border: 1px solid var(--finance-line);
+    border-left: 3px solid var(--finance-green);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.detail-grid span {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-grid small {
+    color: var(--finance-muted);
+    margin-bottom: 0.15rem;
+}
+
+.detail-observation {
+    grid-column: 1 / -1;
+}
+
 @media (max-width: 960px) {
     .main-content {
-        padding: 1.25rem 1rem;
+        padding: calc(var(--mud-appbar-height) + 1rem) 1rem 1.25rem;
     }
 
     .summary-grid {
@@ -174,11 +218,19 @@ html, body {
         align-items: start;
         flex-direction: column;
     }
+
+    .transaction-detail {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 520px) {
     .summary-grid {
         grid-template-columns: 1fr;
+    }
+
+    .detail-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 

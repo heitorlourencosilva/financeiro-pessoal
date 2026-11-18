@@ -1,5 +1,4 @@
 @inherits LayoutComponentBase
-@rendermode InteractiveServer
 <MudThemeProvider />
 <MudPopoverProvider />
 <MudDialogProvider />
@@ -7,8 +6,7 @@
 
 <MudLayout>
     <MudAppBar Elevation="0" Color="Color.Transparent" Class="topbar">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
-                       Edge="Edge.Start" OnClick="AlternarMenu"
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="AlternarMenu"
                        aria-label="Abrir menu" />
         <MudText Typo="Typo.h6" Class="brand">Financeiro pessoal</MudText>
     </MudAppBar>
@@ -27,6 +25,9 @@
             </MudNavLink>
             <MudNavLink Href="/relatorios/comparacao" Icon="@Icons.Material.Filled.CompareArrows">
                 Comparação
+            </MudNavLink>
+            <MudNavLink Href="/transacoes" Icon="@Icons.Material.Filled.SwapHoriz">
+                Transações
             </MudNavLink>
         </MudNavMenu>
     </MudDrawer>

@@ -4,6 +4,7 @@ using Bunit;
 using Financeiro.Api.Components.Pages;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using MudBlazor;
 using MudBlazor.Services;
 using Xunit;
 
@@ -11,6 +12,17 @@ namespace Financeiro.Tests.Components;
 
 public sealed class RelatoriosBlazorTests
 {
+    [Fact]
+    public void Transacoes_RenderizaTituloETabela()
+    {
+        using var contexto = CriarContexto();
+
+        var corte = contexto.RenderComponent<Transacoes>();
+
+        corte.WaitForAssertion(() =>
+            corte.Markup.Should().Contain("Lista analítica"));
+    }
+
     [Fact]
     public void RelatoriosPorConta_RenderizaTituloEResumo()
     {
@@ -65,6 +77,17 @@ public sealed class RelatoriosBlazorTests
         return contexto;
     }
 
+    private static TestContext CriarContexto()
+    {
+        var contexto = new TestContext();
+        contexto.JSInterop.Mode = JSRuntimeMode.Loose;
+        contexto.Services.AddMudServices();
+        contexto.Services.AddSingleton<IHttpClientFactory>(
+            new RouteFakeHttpClientFactory());
+        contexto.RenderComponent<MudPopoverProvider>();
+        return contexto;
+    }
+
     private sealed class FakeHttpClientFactory(string json) : IHttpClientFactory
     {
         public HttpClient CreateClient(string name) =>
@@ -80,5 +103,32 @@ public sealed class RelatoriosBlazorTests
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
             });
+    }
+
+    private sealed class RouteFakeHttpClientFactory : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name) =>
+            new(new RouteFakeHandler());
+    }
+
+    private sealed class RouteFakeHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var json = request.RequestUri?.AbsolutePath switch
+            {
+                "/api/categorias" => "[]",
+                "/api/tags" => "[]",
+                "/api/transacoes" => "[]",
+                _ => "[]"
+            };
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            });
+        }
     }
 }
