@@ -173,3 +173,21 @@ When creating or modifying UI code (HTML, CSS, component layout):
 ## Progress Tracking
 
 **Update AGENTS.md and CONTEXT.md as you work.** After completing a task, update both files to reflect the current state of implementation. This ensures the documentation stays synchronized with the code and serves as the source of truth for the project status.
+
+# Convenções da solution
+- .NET 10, C# com nullable habilitado.
+- Testes com xUnit; um projeto de teste por projeto de produção.
+- Antes de concluir: `dotnet build` sem warnings e `dotnet test` verde.
+- Nunca commitar segredos; usar user-secrets.
+
+# Como trabalhar: use os subagentes
+Para qualquer tarefa que altere código, siga sempre esta ordem:
+1. Use o subagente `programador` para implementar.
+2. Use o subagente `testador` para escrever e rodar os testes.
+3. Se os testes falharem, devolva o erro ao `programador` e repita o passo 2.
+   Limite de 3 tentativas; depois disso, pare e me explique o impasse.
+4. Use o subagente `qualidade` para revisar antes de dar a tarefa como pronta.
+5. Entregue um resumo: o que mudou, testes executados e pendências da revisão.
+
+Não pule o testador nem o revisor, mesmo em mudanças pequenas.
+Não faça merge nem push sem minha aprovação.
