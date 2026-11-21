@@ -57,6 +57,58 @@ namespace Financeiro.Infrastructure.Persistence.Migrations
                     b.ToTable("categorias", (string)null);
                 });
 
+            modelBuilder.Entity("Financeiro.Domain.Entities.RegraClassificacaoAutomatica", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Ativa")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("ativa");
+
+                    b.Property<DateTime>("AtualizadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("atualizada_em");
+
+                    b.Property<Guid>("CategoriaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("categoria_id");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criada_em");
+
+                    b.Property<string>("DescricaoCorrespondenciaNormalizada")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("descricao_correspondencia_normalizada");
+
+                    b.Property<int>("Contexto")
+                        .HasColumnType("integer")
+                        .HasColumnName("contexto");
+
+                    b.Property<int>("Pessoa")
+                        .HasColumnType("integer")
+                        .HasColumnName("pessoa");
+
+                    b.Property<int>("Prioridade")
+                        .HasColumnType("integer")
+                        .HasColumnName("prioridade");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoriaId");
+
+                    b.HasIndex("Ativa", "Prioridade");
+
+                    b.ToTable("regras_classificacao_automatica", (string)null);
+                });
+
             modelBuilder.Entity("Financeiro.Domain.Entities.Conta", b =>
                 {
                     b.Property<Guid>("Id")
@@ -205,6 +257,17 @@ namespace Financeiro.Infrastructure.Persistence.Migrations
                     b.HasIndex("ContaId");
 
                     b.ToTable("transacoes", (string)null);
+                });
+
+            modelBuilder.Entity("Financeiro.Domain.Entities.RegraClassificacaoAutomatica", b =>
+                {
+                    b.HasOne("Financeiro.Domain.Entities.Categoria", "Categoria")
+                        .WithMany()
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Categoria");
                 });
 
             modelBuilder.Entity("TransacaoTags", b =>

@@ -67,7 +67,7 @@ A API **não** usa `app.UseHttpsRedirection()` nem `app.UseHsts()`. O TLS é ter
 
 Despite the stack table in `CONTEXT.md` showing separate layers, the actual implementation is a **single project** (`Financeiro.Api`). Domain entities, value objects, enums, services, features, infrastructure, and Blazor components all live under `src/Financeiro.Api/`. Namespaces provide organization:
 
-- `Financeiro.Domain.Entities` — Conta, Categoria, Transacao, Tag
+- `Financeiro.Domain.Entities` — Conta, Categoria, Transacao, Tag, RegraClassificacaoAutomatica
 - `Financeiro.Domain.Enums` — NaturezaTransacao, TipoConta, Pessoa, Contexto
 - `Financeiro.Domain.ValueObjects` — Dinheiro, Periodo
 - `Financeiro.Domain.Services` — DescricaoNormalizador (text normalization, used by Transacao)
@@ -92,6 +92,8 @@ Despite the stack table in `CONTEXT.md` showing separate layers, the actual impl
 - **`Desclassificar` clears tags.** When a transaction is unclassified, its tags are removed along with its category.
 - **Reclassification is allowed.** Calling `Classificar` on an already-classified transaction overwrites the previous classification silently.
 - **Classificar returns 404 for missing tags.** If any `TagId` in the request does not exist, the endpoint returns 404 instead of ignoring it.
+- **Automatic classification:** rules are stored in `regras_classificacao_automatica`, ordered by descending priority; matching observes normalized term boundaries. Historical matches suggest a classification but never auto-apply it.
+- **Neutral nature guard:** Transferência and Investimento are excluded from automatic rules and historical suggestions.
 
 ### Transaction Flow
 
@@ -99,10 +101,10 @@ The data ingestion pipeline is partially implemented:
 
 1. ✅ Import CSV Itaú ✅; OFX ⏳
 2. ✅ Normalize (applied automatically by `Transacao` constructor and `Atualizar`)
-3. ⏳ Apply rules
-4. ⏳ Suggest by history
+3. ✅ Apply prioritized automatic rules on manual creation and CSV import
+4. ✅ Suggest by automatic rule first, then normalized-description history
 5. ✅ Review queue (`/api/transacoes/pendentes`, `/classificar`, `/desclassificar`)
-6. ⏳ Final classification (endpoint exists; automatic rules pending)
+6. ⏳ Final classification (manual endpoint exists; suggestions are user-reviewed)
 
 ### Testing Strategy
 
@@ -113,7 +115,7 @@ The data ingestion pipeline is partially implemented:
 
 ## Current State
 
-- ✅ Entities: Conta, Categoria, Transacao, Tag (with domain tests)
+- ✅ Entities: Conta, Categoria, Transacao, Tag, RegraClassificacaoAutomatica (existing entities have domain tests)
 - ✅ Value objects: Dinheiro, Periodo (with tests)
 - ✅ Enums: NaturezaTransacao, Contexto, Pessoa, TipoConta (with tests)
 - ✅ Domain services: DescricaoNormalizador in `Domain/Services/` (D-014, with tests)
@@ -141,13 +143,17 @@ The data ingestion pipeline is partially implemented:
 - ✅ Tela de criação manual de transações
 - ✅ Tela da fila de revisão com classificação e desclassificação
 - ✅ Navegação Blazor para criação e revisão
-- ✅ Test suite: 173 testes passando (incluindo 7 testes Bunit)
+- ✅ Test suite: 192 testes passando (incluindo testes Bunit e integrações)
 - Fase 1 do dashboard (endpoints de relatório) completa.
 - Fase 2 do dashboard (telas Blazor dos relatórios) completa.
 - Fase de filtros e drill-down da listagem de transações completa.
-- Próximo passo: regras automáticas e sugestão por histórico
+- ✅ Automatic classification rules persisted with CRUD, priority and safe normalized-term matching
+- ✅ Rule application during manual transaction creation and CSV import; history only provides pending-transaction suggestions
+- ✅ 10 testes de domínio de correspondência, similaridade e validação de regras passaram
+- ✅ Testes de integração para regras, prioridade, sugestão por histórico, neutralidade e desativação executados em `tests/Financeiro.Tests/Features/RegrasClassificacao/RegrasClassificacaoTests.cs` com Docker/Testcontainers
+- Próximo passo por CONTEXT.md: nenhuma implementação funcional adicional definida neste status; continuar pelas pendências de decisão ou por uma nova solicitação.
 
-**Next step per CONTEXT.md:** telas de criação, classificação e revisão de transações.
+**Next step per CONTEXT.md:** execute rule integration coverage and the full suite after Docker/Testcontainers becomes available.
 
 ## Conventions
 

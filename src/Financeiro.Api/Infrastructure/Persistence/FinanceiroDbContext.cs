@@ -16,6 +16,7 @@ public class FinanceiroDbContext : DbContext
     public DbSet<Categoria> Categorias => Set<Categoria>();
     public DbSet<Transacao> Transacoes => Set<Transacao>();
     public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<RegraClassificacaoAutomatica> RegrasClassificacaoAutomatica => Set<RegraClassificacaoAutomatica>();
 
     // --- Configuração do modelo ---
 
@@ -84,6 +85,58 @@ public class FinanceiroDbContext : DbContext
                 .WithMany(e => e.Subcategorias)
                 .HasForeignKey(e => e.CategoriaPaiId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // --- Regra de classificação automática ---
+        modelBuilder.Entity<RegraClassificacaoAutomatica>(builder =>
+        {
+            builder.ToTable("regras_classificacao_automatica");
+
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).HasColumnName("id");
+
+            builder.Property(e => e.DescricaoCorrespondenciaNormalizada)
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasColumnName("descricao_correspondencia_normalizada");
+
+            builder.Property(e => e.CategoriaId)
+                .IsRequired()
+                .HasColumnName("categoria_id");
+
+            builder.HasOne(e => e.Categoria)
+                .WithMany()
+                .HasForeignKey(e => e.CategoriaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Property(e => e.Contexto)
+                .HasConversion<int>()
+                .IsRequired()
+                .HasColumnName("contexto");
+
+            builder.Property(e => e.Pessoa)
+                .HasConversion<int>()
+                .IsRequired()
+                .HasColumnName("pessoa");
+
+            builder.Property(e => e.Prioridade)
+                .IsRequired()
+                .HasColumnName("prioridade");
+
+            builder.Property(e => e.Ativa)
+                .IsRequired()
+                .HasDefaultValue(true)
+                .HasColumnName("ativa");
+
+            builder.Property(e => e.CriadaEm)
+                .IsRequired()
+                .HasColumnName("criada_em");
+
+            builder.Property(e => e.AtualizadaEm)
+                .IsRequired()
+                .HasColumnName("atualizada_em");
+
+            builder.HasIndex(e => new { e.Ativa, e.Prioridade });
         });
 
         // --- Tag ---

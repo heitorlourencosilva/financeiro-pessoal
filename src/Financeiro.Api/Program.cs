@@ -3,6 +3,7 @@ using FastEndpoints.Swagger;
 using Financeiro.Api.Components;
 using Financeiro.Infrastructure.Persistence;
 using Financeiro.Infrastructure.Importers;
+using Financeiro.Features.Classificacao;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -31,6 +32,7 @@ builder.Services
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddSingleton<ItauCsvParser>();
+builder.Services.AddScoped<ServicoClassificacao>();
 
 // ---------- Blazor Server ----------
 builder.Services.AddRazorComponents()

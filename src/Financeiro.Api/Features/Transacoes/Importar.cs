@@ -1,6 +1,7 @@
 using Financeiro.Domain.Entities;
 using Financeiro.Infrastructure.Persistence;
 using Financeiro.Infrastructure.Importers;
+using Financeiro.Features.Classificacao;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,11 +11,16 @@ public class Importar : EndpointWithoutRequest<Importar.FeatureResponse>
 {
     private readonly FinanceiroDbContext _context;
     private readonly ItauCsvParser _parser;
+    private readonly ServicoClassificacao _servicoClassificacao;
 
-    public Importar(FinanceiroDbContext context, ItauCsvParser parser)
+    public Importar(
+        FinanceiroDbContext context,
+        ItauCsvParser parser,
+        ServicoClassificacao servicoClassificacao)
     {
         _context = context;
         _parser = parser;
+        _servicoClassificacao = servicoClassificacao;
     }
 
     public override void Configure()
@@ -67,17 +73,17 @@ public class Importar : EndpointWithoutRequest<Importar.FeatureResponse>
             return;
         }
 
-        foreach (var linha in linhas)
-        {
-            var transacao = new Transacao(
+        var transacoes = linhas
+            .Select(linha => new Transacao(
                 data: linha.Data,
                 descricaoOriginal: linha.DescricaoOriginal,
                 valor: linha.Valor,
                 natureza: linha.Natureza,
-                conta: conta);
+                conta: conta))
+            .ToArray();
 
-            _context.Transacoes.Add(transacao);
-        }
+        await _servicoClassificacao.AplicarRegrasAutomaticasAsync(transacoes, ct);
+        _context.Transacoes.AddRange(transacoes);
 
         await _context.SaveChangesAsync(ct);
 

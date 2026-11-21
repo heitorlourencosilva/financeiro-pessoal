@@ -2,6 +2,7 @@ using Financeiro.Domain.Entities;
 using Financeiro.Domain.Enums;
 using Financeiro.Domain.ValueObjects;
 using Financeiro.Infrastructure.Persistence;
+using Financeiro.Features.Classificacao;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,12 @@ namespace Financeiro.Features.Transacoes;
 public class Criar : Endpoint<Criar.FeatureRequest, TransacaoResponse>
 {
     private readonly FinanceiroDbContext _context;
+    private readonly ServicoClassificacao _servicoClassificacao;
 
-    public Criar(FinanceiroDbContext context)
+    public Criar(FinanceiroDbContext context, ServicoClassificacao servicoClassificacao)
     {
         _context = context;
+        _servicoClassificacao = servicoClassificacao;
     }
 
     public override void Configure()
@@ -43,6 +46,7 @@ public class Criar : Endpoint<Criar.FeatureRequest, TransacaoResponse>
             contexto: request.Contexto,
             pessoa: request.Pessoa);
 
+        await _servicoClassificacao.AplicarRegrasAutomaticasAsync([transacao], ct);
         _context.Transacoes.Add(transacao);
         await _context.SaveChangesAsync(ct);
 

@@ -116,6 +116,7 @@ Sugestão por histórico → Fila de revisão → Classificação final
 | D-018 | 2026-10-12 | `FeatureResponse` de transações é compartilhado em `TransacaoResponse` (record único), eliminando duplicação entre endpoints |
 | D-019 | 2026-10-20 | Dashboard MVP entrega fluxo de caixa **realizado** apenas; projeção futura (recorrências/agendamentos) fica como evolução, dependente de decisão de modelo própria |
 | D-020 | 2026-10-22 | Toda resposta da IA deve informar o percentual estimado de contexto em uso no final |
+| D-021 | 2026-11-20 | Regras automáticas de classificação com prioridade e correspondência por limites de termos normalizados; histórico serve como sugestão, não classificação automática |
 
 ## Como Trabalhar Neste Projeto
 
@@ -281,10 +282,13 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Tela Blazor da fila de revisão, com classificação e desclassificação
 - Navegação para criação e revisão de transações
 - Testes Bunit de criação e revisão de transações
-- **Suíte total:** 173 testes passando (incluindo 7 testes Bunit)
+- **Suíte total:** 192 testes passando (incluindo testes Bunit e testes de integração)
+- Regras automáticas persistidas, CRUD (`/api/regras-classificacao`), aplicação em criação/importação e sugestão por histórico (`/api/transacoes/{Id}/sugestao-classificacao`) — backend implementado
+- 10 testes de domínio de correspondência, similaridade e validação de regra passaram
+- Testes de integração das regras executados com Docker/Testcontainers em `Features/RegrasClassificacao/RegrasClassificacaoTests.cs`; cobertura verde
 
 **Próximo passo:**
-- Regras automáticas e sugestão por histórico na classificação de transações
+- Nenhuma implementação funcional adicional definida neste status. Continuar a partir das pendências de decisão ou de uma nova solicitação.
 
 **Pendências de decisão:**
 - Como tratar `TipoConta.CartaoCredito` na importação? (fatura vem em XLSX, relação 1:N com transações)
