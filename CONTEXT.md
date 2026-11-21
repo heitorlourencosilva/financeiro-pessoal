@@ -55,7 +55,7 @@ Conta bancária é **meio**, não contexto. Contexto é atributo da transação.
 5. ✅ Dashboard: composição + fluxo de caixa realizado (D-019)
 6. ✅ Relatório por conta (com total no final)
 7. ✅ Filtros por período, categoria, tags, contexto, pessoa
-8. ✅ Visão sintética, analítica e drill-down (backend ✅; UI ⏳)
+8. ✅ Visão sintética, analítica e drill-down (backend e UI)
 9. ✅ Comparação por período e por categoria
 10. Testes automatizados em todos os níveis
 
@@ -280,9 +280,14 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Endpoints de opções para categorias e tags
 - Tela Blazor de criação manual de transações
 - Tela Blazor da fila de revisão, com classificação e desclassificação
-- Navegação para criação e revisão de transações
+- Tela Blazor de contas: criar, renomear e desativar via endpoints existentes
+- Tela Blazor de importação CSV Itaú com seleção de conta ativa e envio multipart para o endpoint existente
+- Endpoint de importação rejeita conta inativa e arquivos acima de 50 MiB
+- Navegação agrupada em Relatórios, Movimentações (transações, nova, revisão e importação) e Gestão (contas)
+- Navegação para criação, revisão, importação de transações e gestão de contas
 - Testes Bunit de criação e revisão de transações
-- **Suíte total:** 192 testes passando (incluindo testes Bunit e testes de integração)
+- 10 testes Bunit de contas/importação e testes de integração para conta inativa e arquivo acima do limite
+- **Suíte total:** 204 testes passando (incluindo testes Bunit e testes de integração)
 - Regras automáticas persistidas, CRUD (`/api/regras-classificacao`), aplicação em criação/importação e sugestão por histórico (`/api/transacoes/{Id}/sugestao-classificacao`) — backend implementado
 - 10 testes de domínio de correspondência, similaridade e validação de regra passaram
 - Testes de integração das regras executados com Docker/Testcontainers em `Features/RegrasClassificacao/RegrasClassificacaoTests.cs`; cobertura verde
@@ -294,3 +299,5 @@ Projeto único. Namespaces organizam. Migração futura para múltiplos projetos
 - Como tratar `TipoConta.CartaoCredito` na importação? (fatura vem em XLSX, relação 1:N com transações)
 - Futuro: mover `DescricaoNormalizador` para um projeto `Financeiro.Domain` físico? (hoje é pasta dentro de `Financeiro.Api`)
 - Futuro: parser OFX (quando houver fonte que exporte nesse formato)
+
+**Frontend atual:** a importação usa o parser já existente na API; o formulário envia `arquivo` e `contaId` para `/api/transacoes/importar` e só confirma após resposta bem-sucedida com payload válido. A API limita o arquivo a 50 MiB e rejeita contas inativas. Contas podem ser criadas, renomeadas e desativadas; reativação não está disponível na API atual.

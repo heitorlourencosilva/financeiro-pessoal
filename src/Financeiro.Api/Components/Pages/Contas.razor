@@ -1,0 +1,301 @@
+@page "/contas"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Contas</PageTitle>
+
+<section class="report-page">
+    <header class="report-header">
+        <div>
+            <h1 class="mud-typography mud-typography-h4 report-title">Contas</h1>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Cadastre e organize as contas usadas nas movimentações.</MudText>
+        </div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(_erro))
+    {
+        <div class="error-panel account-message" role="alert">@_erro</div>
+    }
+
+    <div class="account-create-form paper-panel">
+        <MudText Typo="Typo.h6" Class="account-form-heading">Criar conta</MudText>
+        <MudTextField T="string" Label="Nome da conta" @bind-Value="_novoNome" MaxLength="100"
+                      Variant="Variant.Outlined" Immediate="true" />
+        <MudSelect T="TipoConta" Label="Tipo de conta" @bind-Value="_novoTipo" Variant="Variant.Outlined">
+            @foreach (var tipo in Enum.GetValues<TipoConta>())
+            {
+                <MudSelectItem T="TipoConta" Value="@tipo">@tipo</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTextField T="string" Label="Instituição (opcional)" @bind-Value="_novaInstituicao" MaxLength="100"
+                      Variant="Variant.Outlined" />
+        <div class="form-actions">
+            <MudButton Variant="Variant.Filled" Class="action-primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="CriarContaAsync" Disabled="_salvando">
+                Criar conta
+            </MudButton>
+        </div>
+    </div>
+
+    @if (_carregando)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Dark" />
+    }
+    else
+    {
+        <MudTable Items="_contas" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm"
+                  Class="paper-table" aria-label="Contas cadastradas">
+            <HeaderContent>
+                <MudTh>Conta</MudTh>
+                <MudTh>Tipo</MudTh>
+                <MudTh>Instituição</MudTh>
+                <MudTh>Situação</MudTh>
+                <MudTh>Ações</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @if (_contaEmEdicaoId == context.Id)
+                {
+                    <MudTd DataLabel="Conta">
+                        <MudTextField T="string" Label="Nome da conta" @bind-Value="_nomeEmEdicao" MaxLength="100"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" />
+                    </MudTd>
+                }
+                else
+                {
+                    <MudTd DataLabel="Conta">@context.Nome</MudTd>
+                }
+                <MudTd DataLabel="Tipo">@context.Tipo</MudTd>
+                <MudTd DataLabel="Instituição">@(context.Instituicao ?? "—")</MudTd>
+                <MudTd DataLabel="Situação">@(context.Ativa ? "Ativa" : "Inativa")</MudTd>
+                <MudTd DataLabel="Ações">
+                    @if (_contaEmEdicaoId == context.Id)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Dark"
+                                   OnClick="@(() => RenomearAsync(context.Id))" Disabled="_salvando">
+                            Salvar
+                        </MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Dark"
+                                   OnClick="CancelarEdicao" Disabled="_salvando">
+                            Cancelar
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Dark"
+                                   OnClick="@(() => IniciarEdicao(context))" Disabled="_salvando">
+                            Renomear
+                        </MudButton>
+                        @if (context.Ativa)
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error"
+                                       OnClick="@(() => DesativarAsync(context.Id))" Disabled="_salvando">
+                                Desativar
+                            </MudButton>
+                        }
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        @if (_contas.Length == 0 && string.IsNullOrWhiteSpace(_erro))
+        {
+            <div class="empty-state">Nenhuma conta cadastrada. Crie uma conta para começar a registrar movimentações.</div>
+        }
+    }
+</section>
+
+@code {
+    private ContaItem[] _contas = [];
+    private string _novoNome = string.Empty;
+    private TipoConta _novoTipo = TipoConta.ContaCorrente;
+    private string? _novaInstituicao;
+    private Guid? _contaEmEdicaoId;
+    private string _nomeEmEdicao = string.Empty;
+    private string? _erro;
+    private bool _carregando;
+    private bool _salvando;
+
+    protected override async Task OnInitializedAsync() => await CarregarAsync();
+
+    private async Task CarregarAsync()
+    {
+        _carregando = true;
+        try
+        {
+            using var client = CriarClient();
+            _contas = await client.GetFromJsonAsync<ContaItem[]>("/api/contas") ?? [];
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar as contas.";
+        }
+        finally
+        {
+            _carregando = false;
+        }
+    }
+
+    private async Task CriarContaAsync()
+    {
+        _erro = null;
+        if (string.IsNullOrWhiteSpace(_novoNome))
+        {
+            _erro = "Informe o nome da conta.";
+            return;
+        }
+
+        await ExecutarAlteracaoAsync(async client =>
+        {
+            using var resposta = await client.PostAsJsonAsync("/api/contas", new
+            {
+                nome = _novoNome,
+                tipo = _novoTipo,
+                instituicao = string.IsNullOrWhiteSpace(_novaInstituicao) ? null : _novaInstituicao
+            });
+            if (!resposta.IsSuccessStatusCode)
+            {
+                _erro = await MensagemErroAsync(resposta, "Não foi possível criar a conta.");
+                return false;
+            }
+
+            _novoNome = string.Empty;
+            _novaInstituicao = null;
+            Snackbar.Add("Conta criada.", Severity.Success);
+            return true;
+        });
+    }
+
+    private void IniciarEdicao(ContaItem conta)
+    {
+        _contaEmEdicaoId = conta.Id;
+        _nomeEmEdicao = conta.Nome;
+        _erro = null;
+    }
+
+    private void CancelarEdicao()
+    {
+        _contaEmEdicaoId = null;
+        _nomeEmEdicao = string.Empty;
+    }
+
+    private async Task RenomearAsync(Guid id)
+    {
+        _erro = null;
+        if (string.IsNullOrWhiteSpace(_nomeEmEdicao))
+        {
+            _erro = "Informe o nome da conta.";
+            return;
+        }
+
+        await ExecutarAlteracaoAsync(async client =>
+        {
+            using var resposta = await client.PutAsJsonAsync($"/api/contas/{id}", new { nome = _nomeEmEdicao });
+            if (!resposta.IsSuccessStatusCode)
+            {
+                _erro = await MensagemErroAsync(resposta, "Não foi possível renomear a conta.");
+                return false;
+            }
+
+            CancelarEdicao();
+            Snackbar.Add("Conta renomeada.", Severity.Success);
+            return true;
+        });
+    }
+
+    private async Task DesativarAsync(Guid id)
+    {
+        _erro = null;
+        await ExecutarAlteracaoAsync(async client =>
+        {
+            using var resposta = await client.DeleteAsync($"/api/contas/{id}/desativar");
+            if (!resposta.IsSuccessStatusCode)
+            {
+                _erro = await MensagemErroAsync(resposta, "Não foi possível desativar a conta.");
+                return false;
+            }
+
+            Snackbar.Add("Conta desativada.", Severity.Success);
+            return true;
+        });
+    }
+
+    private async Task ExecutarAlteracaoAsync(Func<HttpClient, Task<bool>> acao)
+    {
+        _salvando = true;
+        try
+        {
+            using var client = CriarClient();
+            if (await acao(client))
+                await CarregarAsync();
+        }
+        catch (Exception)
+        {
+            _erro ??= "Não foi possível concluir a operação da conta.";
+        }
+        finally
+        {
+            _salvando = false;
+        }
+    }
+
+    private HttpClient CriarClient()
+    {
+        var client = HttpClientFactory.CreateClient();
+        client.BaseAddress = new Uri(Navigation.BaseUri);
+        return client;
+    }
+
+    private static async Task<string> MensagemErroAsync(HttpResponseMessage resposta, string padrao)
+    {
+        var corpo = await resposta.Content.ReadAsStringAsync();
+        var detalhe = ExtrairDetalhe(corpo);
+        return string.IsNullOrWhiteSpace(detalhe)
+            ? $"{padrao} (HTTP {(int)resposta.StatusCode})."
+            : $"{padrao} {detalhe}";
+    }
+
+    private static string? ExtrairDetalhe(string corpo)
+    {
+        if (string.IsNullOrWhiteSpace(corpo))
+            return null;
+
+        try
+        {
+            using var documento = System.Text.Json.JsonDocument.Parse(corpo);
+            var raiz = documento.RootElement;
+            foreach (var nome in new[] { "errors", "detail", "title" })
+            {
+                var propriedade = raiz.EnumerateObject()
+                    .FirstOrDefault(p => string.Equals(p.Name, nome, StringComparison.OrdinalIgnoreCase));
+                if (propriedade.Value.ValueKind == System.Text.Json.JsonValueKind.Undefined)
+                    continue;
+
+                if (propriedade.Value.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    var mensagens = propriedade.Value.EnumerateObject()
+                        .SelectMany(p => p.Value.ValueKind == System.Text.Json.JsonValueKind.Array
+                            ? p.Value.EnumerateArray().Where(v => v.ValueKind == System.Text.Json.JsonValueKind.String)
+                                .Select(v => v.GetString())
+                            : []);
+                    var agrupadas = string.Join(" ", mensagens.Where(m => !string.IsNullOrWhiteSpace(m)));
+                    if (!string.IsNullOrWhiteSpace(agrupadas))
+                        return agrupadas;
+                }
+                else if (propriedade.Value.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    return propriedade.Value.GetString();
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return corpo;
+        }
+
+        return corpo;
+    }
+
+    public sealed record ContaItem(Guid Id, string Nome, TipoConta Tipo, string? Instituicao, bool Ativa, DateTime CriadaEm);
+}

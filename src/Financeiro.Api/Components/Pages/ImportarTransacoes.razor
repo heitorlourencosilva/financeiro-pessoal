@@ -1,0 +1,224 @@
+@page "/transacoes/importar"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Importar CSV Itaú</PageTitle>
+
+<section class="report-page">
+    <header class="report-header">
+        <div>
+            <h1 class="mud-typography mud-typography-h4 report-title">Importar CSV Itaú</h1>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Envie o arquivo para adicionar as movimentações à conta selecionada.</MudText>
+        </div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(_erro))
+    {
+        <div class="error-panel import-message" role="alert">@_erro</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(_sucesso))
+    {
+        <div class="import-success" role="status">@_sucesso</div>
+    }
+
+    <div class="import-form paper-panel">
+        <MudSelect T="string" Label="Conta ativa" @bind-Value="_contaId" Variant="Variant.Outlined"
+                   Disabled="_carregandoContas || _importando">
+            @foreach (var conta in _contasAtivas)
+            {
+                <MudSelectItem T="string" Value="@conta.Id.ToString()">@conta.Nome</MudSelectItem>
+            }
+        </MudSelect>
+        <div class="upload-field">
+            <label for="csv-file">Arquivo CSV</label>
+            <InputFile @key="_fileInputKey" id="csv-file" OnChange="SelecionarArquivo"
+                       accept=".csv,text/csv" disabled="@_importando" />
+            @if (_arquivo is not null)
+            {
+                <span class="upload-file-name">@_arquivo.Name</span>
+            }
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Selecione o CSV exportado pelo Itaú (até 50 MB).</MudText>
+        </div>
+        @if (_contasAtivas.Length == 0 && !_carregandoContas && string.IsNullOrWhiteSpace(_erro))
+        {
+            <div class="empty-state">Cadastre uma conta ativa antes de importar movimentações.</div>
+        }
+        <div class="form-actions">
+            <MudButton Variant="Variant.Filled" Class="action-primary" StartIcon="@Icons.Material.Filled.FileUpload"
+                       OnClick="ImportarAsync" Disabled="_importando || _carregandoContas || _contasAtivas.Length == 0">
+                @if (_importando)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                }
+                Importar arquivo
+            </MudButton>
+        </div>
+    </div>
+</section>
+
+@code {
+    private const long TamanhoMaximoArquivo = 50 * 1024 * 1024;
+    private ContaItem[] _contasAtivas = [];
+    private string _contaId = string.Empty;
+    private IBrowserFile? _arquivo;
+    private string? _erro;
+    private string? _sucesso;
+    private int _fileInputKey;
+    private bool _carregandoContas = true;
+    private bool _importando;
+
+    protected override async Task OnInitializedAsync() => await CarregarContasAsync();
+
+    private async Task CarregarContasAsync()
+    {
+        _carregandoContas = true;
+        try
+        {
+            using var client = CriarClient();
+            var contas = await client.GetFromJsonAsync<ContaItem[]>("/api/contas") ?? [];
+            _contasAtivas = contas.Where(conta => conta.Ativa).ToArray();
+            if (_contasAtivas.Length > 0)
+                _contaId = _contasAtivas[0].Id.ToString();
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível carregar as contas ativas.";
+        }
+        finally
+        {
+            _carregandoContas = false;
+        }
+    }
+
+    private void SelecionarArquivo(InputFileChangeEventArgs args)
+    {
+        _arquivo = args.File;
+        _erro = null;
+        _sucesso = null;
+    }
+
+    private async Task ImportarAsync()
+    {
+        _erro = null;
+        _sucesso = null;
+        if (!Guid.TryParse(_contaId, out var contaId) || !_contasAtivas.Any(conta => conta.Id == contaId))
+        {
+            _erro = "Selecione uma conta ativa.";
+            return;
+        }
+        if (_arquivo is null)
+        {
+            _erro = "Selecione um arquivo CSV.";
+            return;
+        }
+        if (_arquivo.Size > TamanhoMaximoArquivo)
+        {
+            _erro = "O arquivo excede o limite de 50 MB.";
+            return;
+        }
+
+        _importando = true;
+        try
+        {
+            using var cliente = CriarClient();
+            using var formulario = new MultipartFormDataContent();
+            await using var fluxo = _arquivo.OpenReadStream(TamanhoMaximoArquivo);
+            using var conteudoArquivo = new StreamContent(fluxo);
+            formulario.Add(conteudoArquivo, "arquivo", _arquivo.Name);
+            formulario.Add(new StringContent(contaId.ToString()), "contaId");
+
+            using var resposta = await cliente.PostAsync("/api/transacoes/importar", formulario);
+            if (!resposta.IsSuccessStatusCode)
+            {
+                _erro = await MensagemErroAsync(resposta);
+                return;
+            }
+
+            var resultado = await resposta.Content.ReadFromJsonAsync<ImportacaoResponse>();
+            if (resultado is null || resultado.Importadas < 0)
+            {
+                _erro = "A importação não foi confirmada: a resposta da API não contém um resultado válido.";
+                return;
+            }
+
+            if (resultado.Erros is { Count: > 0 })
+            {
+                _erro = $"A API informou erros durante a importação: {string.Join(" ", resultado.Erros)}";
+                return;
+            }
+
+            _sucesso = $"{resultado.Importadas} movimentação(ões) importada(s) com sucesso.";
+            _arquivo = null;
+            _fileInputKey++;
+        }
+        catch (Exception)
+        {
+            _erro = "Não foi possível concluir a importação. Verifique o arquivo e tente novamente.";
+        }
+        finally
+        {
+            _importando = false;
+        }
+    }
+
+    private HttpClient CriarClient()
+    {
+        var client = HttpClientFactory.CreateClient();
+        client.BaseAddress = new Uri(Navigation.BaseUri);
+        return client;
+    }
+
+    private static async Task<string> MensagemErroAsync(HttpResponseMessage resposta)
+    {
+        var corpo = await resposta.Content.ReadAsStringAsync();
+        var detalhe = ExtrairDetalhe(corpo);
+        return string.IsNullOrWhiteSpace(detalhe)
+            ? $"A importação falhou (HTTP {(int)resposta.StatusCode}). Nenhuma confirmação de sucesso foi recebida."
+            : $"A importação falhou (HTTP {(int)resposta.StatusCode}): {detalhe}";
+    }
+
+    private static string? ExtrairDetalhe(string corpo)
+    {
+        if (string.IsNullOrWhiteSpace(corpo))
+            return null;
+
+        try
+        {
+            using var documento = System.Text.Json.JsonDocument.Parse(corpo);
+            var raiz = documento.RootElement;
+            foreach (var nome in new[] { "errors", "detail", "title" })
+            {
+                var propriedade = raiz.EnumerateObject()
+                    .FirstOrDefault(p => string.Equals(p.Name, nome, StringComparison.OrdinalIgnoreCase));
+                if (propriedade.Value.ValueKind == System.Text.Json.JsonValueKind.Undefined)
+                    continue;
+
+                if (propriedade.Value.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    var mensagens = propriedade.Value.EnumerateObject()
+                        .SelectMany(p => p.Value.ValueKind == System.Text.Json.JsonValueKind.Array
+                            ? p.Value.EnumerateArray().Where(v => v.ValueKind == System.Text.Json.JsonValueKind.String)
+                                .Select(v => v.GetString())
+                            : []);
+                    var agrupadas = string.Join(" ", mensagens.Where(m => !string.IsNullOrWhiteSpace(m)));
+                    if (!string.IsNullOrWhiteSpace(agrupadas))
+                        return agrupadas;
+                }
+                else if (propriedade.Value.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    return propriedade.Value.GetString();
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return corpo;
+        }
+
+        return corpo;
+    }
+
+    public sealed record ContaItem(Guid Id, string Nome, bool Ativa);
+    public sealed record ImportacaoResponse(int Importadas, IReadOnlyList<string> Erros);
+}

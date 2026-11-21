@@ -9,6 +9,8 @@ namespace Financeiro.Features.Transacoes;
 
 public class Importar : EndpointWithoutRequest<Importar.FeatureResponse>
 {
+    private const long TamanhoMaximoArquivo = 50L * 1024 * 1024;
+
     private readonly FinanceiroDbContext _context;
     private readonly ItauCsvParser _parser;
     private readonly ServicoClassificacao _servicoClassificacao;
@@ -42,6 +44,13 @@ public class Importar : EndpointWithoutRequest<Importar.FeatureResponse>
             return;
         }
 
+        if (arquivo.Length > TamanhoMaximoArquivo)
+        {
+            AddError("arquivo", "O arquivo CSV não pode exceder 50 MiB.");
+            await SendErrorsAsync(400, ct);
+            return;
+        }
+
         if (!Guid.TryParse(contaIdRaw, out var contaId))
         {
             AddError("contaId", "Conta é obrigatória e deve ser um Guid válido.");
@@ -55,6 +64,13 @@ public class Importar : EndpointWithoutRequest<Importar.FeatureResponse>
         if (conta is null)
         {
             await SendNotFoundAsync(ct);
+            return;
+        }
+
+        if (!conta.Ativa)
+        {
+            AddError("contaId", "A conta selecionada está inativa.");
+            await SendErrorsAsync(400, ct);
             return;
         }
 

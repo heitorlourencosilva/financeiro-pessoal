@@ -7,7 +7,7 @@
 <MudLayout>
     <MudAppBar Elevation="0" Color="Color.Transparent" Class="topbar">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="AlternarMenu"
-                       aria-label="Abrir menu" />
+                       aria-label="@(_menuAberto ? "Fechar menu" : "Abrir menu")" />
         <MudText Typo="Typo.h6" Class="brand">Financeiro pessoal</MudText>
     </MudAppBar>
     <MudDrawer @bind-Open="_menuAberto" Elevation="0" ClipMode="DrawerClipMode.Always"
@@ -26,6 +26,8 @@
             <MudNavLink Href="/relatorios/comparacao" Icon="@Icons.Material.Filled.CompareArrows">
                 Comparação
             </MudNavLink>
+
+            <MudText Typo="Typo.caption" Class="nav-section">Movimentações</MudText>
             <MudNavLink Href="/transacoes" Icon="@Icons.Material.Filled.SwapHoriz">
                 Transações
             </MudNavLink>
@@ -34,6 +36,14 @@
             </MudNavLink>
             <MudNavLink Href="/transacoes/revisao" Icon="@Icons.Material.Filled.Rule">
                 Revisão
+            </MudNavLink>
+            <MudNavLink Href="/transacoes/importar" Icon="@Icons.Material.Filled.FileUpload">
+                Importar CSV
+            </MudNavLink>
+
+            <MudText Typo="Typo.caption" Class="nav-section">Gestão</MudText>
+            <MudNavLink Href="/contas" Icon="@Icons.Material.Filled.AccountBalanceWallet">
+                Contas
             </MudNavLink>
         </MudNavMenu>
     </MudDrawer>

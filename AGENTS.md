@@ -74,7 +74,7 @@ Despite the stack table in `CONTEXT.md` showing separate layers, the actual impl
 - `Financeiro.Features.<NomeDaFeature>` — vertical slices (one folder per use case)
 - `Financeiro.Infrastructure.Persistence` — EF Core DbContext + migrations
 - `Financeiro.Infrastructure.Importers` — CSV/OFX import (CSV Itaú done; OFX pending)
-- `Financeiro.Api.Components` — Blazor Server + MudBlazor UI (scaffolding only)
+- `Financeiro.Api.Components` — Blazor Server + MudBlazor UI (pages and shared layout)
 
 ### Key Design Decisions
 
@@ -129,7 +129,7 @@ The data ingestion pipeline is partially implemented:
 - ✅ Importação CSV Itaú
 - ✅ Review queue: `GET /api/transacoes/pendentes`, `PUT /api/transacoes/{Id}/classificar`, `PUT /api/transacoes/{Id}/desclassificar` + `FilaRevisaoTests`
 - ✅ Shared `TransacaoResponse` (eliminated 7 duplicated response records)
-- ✅ Blazor Server scaffolding (App.razor, Routes.razor, MainLayout.razor) — components not yet built
+- ✅ Blazor Server + MudBlazor frontend: relatórios, listagem/criação/revisão de transações, gestão de contas e importação CSV Itaú
 - ✅ Filtros na listagem de transações (período, categoria, contexto, pessoa, tagId)
 - ✅ Relatório por conta (com total no final)
 - ✅ Composição por categoria (GET /api/relatorios/composicao)
@@ -142,8 +142,13 @@ The data ingestion pipeline is partially implemented:
 - ✅ Endpoints de opções para categorias e tags
 - ✅ Tela de criação manual de transações
 - ✅ Tela da fila de revisão com classificação e desclassificação
-- ✅ Navegação Blazor para criação e revisão
-- ✅ Test suite: 192 testes passando (incluindo testes Bunit e integrações)
+- ✅ Tela de gestão de contas (cadastro, renomeação e desativação)
+- ✅ Tela de importação CSV Itaú com seleção de conta ativa e tratamento de erro HTTP/validação
+- ✅ API de importação rejeita contas inativas e arquivos acima de 50 MiB
+- ✅ Navegação agrupada em Relatórios, Movimentações e Gestão
+- ✅ Navegação Blazor para criação, revisão, importação e gestão de contas
+- ✅ 10 testes Bunit de contas/importação e testes de integração para os limites da importação
+- ✅ Test suite: 204 testes passando (incluindo testes Bunit e integrações)
 - Fase 1 do dashboard (endpoints de relatório) completa.
 - Fase 2 do dashboard (telas Blazor dos relatórios) completa.
 - Fase de filtros e drill-down da listagem de transações completa.

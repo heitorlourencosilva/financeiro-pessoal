@@ -49,8 +49,13 @@ public class ImportarTransacoesTests(PostgresFixture fixture) : IntegrationTestB
 
     private static MultipartFormDataContent CriarForm(Guid contaId, string csv)
     {
+        return CriarForm(contaId, Encoding.UTF8.GetBytes(csv));
+    }
+
+    private static MultipartFormDataContent CriarForm(Guid contaId, byte[] arquivo)
+    {
         var form = new MultipartFormDataContent();
-        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
+        var fileContent = new ByteArrayContent(arquivo);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/csv");
         form.Add(fileContent, "arquivo", "extrato.csv");
         form.Add(new StringContent(contaId.ToString()), "contaId");
@@ -287,5 +292,62 @@ public class ImportarTransacoesTests(PostgresFixture fixture) : IntegrationTestB
         var contextAssert = contextAssertScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
         var total = await contextAssert.Transacoes.CountAsync();
         total.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Importar_ContaInativa_RetornaBadRequestAntesDeProcessarCsv()
+    {
+        // Arrange
+        await ClearDatabaseAsync();
+
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        var conta = new Conta("Conta inativa", TipoConta.ContaCorrente, null);
+        conta.Desativar();
+        context.Contas.Add(conta);
+        await context.SaveChangesAsync();
+
+        using var form = CriarForm(conta.Id, "conteúdo que não é um CSV válido");
+
+        // Act
+        var response = await Client.PostAsync("/api/transacoes/importar", form);
+        var corpo = await response.Content.ReadAsStringAsync();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        corpo.Should().Contain("\"reason\":\"contaId\"");
+
+        await using var contextAssertScope = CreateAsyncScope();
+        var contextAssert = contextAssertScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        (await contextAssert.Transacoes.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Importar_ArquivoAcimaDe50MiB_RetornaBadRequestSemProcessarConteudo()
+    {
+        // Arrange
+        await ClearDatabaseAsync();
+
+        await using var scope = CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        var conta = new Conta("Conta ativa", TipoConta.ContaCorrente, null);
+        context.Contas.Add(conta);
+        await context.SaveChangesAsync();
+
+        const int tamanhoLimite = 50 * 1024 * 1024;
+        var conteudoAcimaDoLimite = new byte[tamanhoLimite + 1];
+        using var form = CriarForm(conta.Id, conteudoAcimaDoLimite);
+
+        // Act
+        var response = await Client.PostAsync("/api/transacoes/importar", form);
+        var corpo = await response.Content.ReadAsStringAsync();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        corpo.Should().Contain("\"reason\":\"arquivo\"");
+
+        await using var contextAssertScope = CreateAsyncScope();
+        var contextAssert = contextAssertScope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        (await contextAssert.Transacoes.CountAsync()).Should().Be(0);
     }
 }

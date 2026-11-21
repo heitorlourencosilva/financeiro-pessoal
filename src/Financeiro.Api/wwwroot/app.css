@@ -207,6 +207,72 @@ body {
     padding: 1.25rem;
 }
 
+.account-create-form,
+.import-form {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+}
+
+.account-create-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-left: 3px solid var(--finance-green);
+}
+
+.account-form-heading,
+.account-create-form .form-actions,
+.import-form .form-actions,
+.import-form .empty-state {
+    grid-column: 1 / -1;
+}
+
+.account-create-form .form-actions,
+.import-form .form-actions {
+    justify-content: flex-start;
+}
+
+.action-primary {
+    background-color: var(--finance-green) !important;
+    color: var(--finance-paper) !important;
+}
+
+.action-primary:hover {
+    background-color: #184a36 !important;
+}
+
+.upload-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.85rem;
+    border: 1px solid var(--finance-line);
+    background: var(--finance-bg);
+}
+
+.upload-field label {
+    color: var(--finance-ink);
+    font-weight: 600;
+}
+
+.upload-file-name {
+    overflow-wrap: anywhere;
+    color: var(--finance-green);
+}
+
+.account-message,
+.import-message,
+.import-success {
+    margin-bottom: 1rem;
+}
+
+.import-success {
+    padding: 1rem;
+    border-left: 3px solid var(--finance-green);
+    background: var(--finance-green-soft);
+    color: var(--finance-ink);
+}
+
 .transaction-form .error-panel,
 .transaction-form .form-actions {
     grid-column: 1 / -1;
@@ -298,12 +364,17 @@ body {
     }
 
     .transaction-form,
+    .account-create-form,
     .classification-grid {
         grid-template-columns: 1fr;
     }
 
     .transaction-form .error-panel,
-    .transaction-form .form-actions {
+    .transaction-form .form-actions,
+    .account-form-heading,
+    .account-create-form .form-actions,
+    .import-form .form-actions,
+    .import-form .empty-state {
         grid-column: auto;
     }
 
